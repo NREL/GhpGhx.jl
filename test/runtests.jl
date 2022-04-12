@@ -31,4 +31,4 @@ ghpghx_results = GHPGHX.get_ghpghx_results_for_reopt(results, inputs_params)
 @info "GHPGHX model solved" #with status $(results["status"])."
 
 
-#@test 1 == 1
+@test typeof(results) == GHPGHX.ResultsStruct
