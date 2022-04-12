@@ -2,7 +2,7 @@ using Test
 using JSON
 using CSV
 using DataFrames
-include("../src/GHPGHX.jl")
+include("../src/GhpGhx.jl")
 
 inputs_dict = JSON.parsefile("inputs/inputs_base.json")
 cop_map_df = CSV.read("inputs/cop_map.csv", DataFrame)
@@ -24,11 +24,11 @@ inputs_dict["ambient_temperature_f"] = ones(8760) * 59.0
 # TODO Add ground_k_by_climate_zone lookup functionality from REopt.jl and need lat/long too
 inputs_dict["ground_thermal_conductivity_btu_per_hr_ft_f"] = 1.2
 
-@info "Starting GHPGHX" #with timeout of $(timeout) seconds..."
-results, inputs_params = GHPGHX.ghp_model(inputs_dict)
+@info "Starting GhpGhx" #with timeout of $(timeout) seconds..."
+results, inputs_params = GhpGhx.ghp_model(inputs_dict)
 # Create a dictionary of the results data needed for REopt
-ghpghx_results = GHPGHX.get_ghpghx_results_for_reopt(results, inputs_params)
-@info "GHPGHX model solved" #with status $(results["status"])."
+GhpGhx_results = GhpGhx.get_GhpGhx_results_for_reopt(results, inputs_params)
+@info "GhpGhx model solved" #with status $(results["status"])."
 
 
-@test typeof(results) == GHPGHX.ResultsStruct
+@test typeof(results) == GhpGhx.ResultsStruct

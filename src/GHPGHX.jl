@@ -1,11 +1,11 @@
-module GHPGHX
+module GhpGhx
 # -------
 export ghp_model
-export get_ghpghx_results_for_reopt
+export get_GhpGhx_results_for_reopt
 
-include("ghpghx_inputs.jl")
+include("GhpGhx_inputs.jl")
 
-include("ghpghx_results.jl")
+include("GhpGhx_results.jl")
 
 """
     ghp_model(d)
@@ -489,4 +489,4 @@ end
 
 
 # -------
-end # module GHPGHX
+end # module GhpGhx

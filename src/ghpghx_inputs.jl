@@ -3,10 +3,10 @@
 """
     InputsStruct
 
-This struct defines the inputs for the GHPGHX module
+This struct defines the inputs for the GhpGhx module
 """
 Base.@kwdef struct InputsStruct
-    ##### These are the exact /ghpghx POST names from the API #####
+    ##### These are the exact /GhpGhx POST names from the API #####
     # Parameters
     borehole_depth_ft::Float64
     ghx_header_depth_ft::Float64
@@ -48,8 +48,8 @@ Base.@kwdef struct InputsStruct
     max_sizing_iterations::Int64
     init_sizing_factor_ft_per_peak_ton::Float64
     
-    ##### These are the variable names used in the GHPGHX, kept from TESS ######
-    # TODO eventually just use the API names above in GHPGHX to remove redundancy (BUT WOULD HAVE TO DEAL WITH UNITS CONVERSION STILL)  
+    ##### These are the variable names used in the GhpGhx, kept from TESS ######
+    # TODO eventually just use the API names above in GhpGhx to remove redundancy (BUT WOULD HAVE TO DEAL WITH UNITS CONVERSION STILL)  
     I_Configuration::Int64 = 1  #!1=Decentralized WSHPs, 2=Decentralized WWHPs, 3=Centralized WWHPs, 4=Centralized WWHPs with HRC
     Depth_Bores::Float64 #!Depth of the boreholes (ft)
     Depth_Header::Float64  #!Depth of the ground heat exchanger headers below grade (ft)
@@ -119,7 +119,7 @@ function InputsProcess(d::Dict)
     d[:MMBTU_TO_KWH] = 293.07  # [kwh/MMBtu]
     d[:METER_TO_FEET] = 3.28084  # [ft/m]
 
-    # Convert API inputs to GHPGHX variable names, and units from English to SI
+    # Convert API inputs to GhpGhx variable names, and units from English to SI
     d[:Depth_Bores] =  d["borehole_depth_ft"] / d[:METER_TO_FEET]  # [m]
     d[:Depth_Header] = d["ghx_header_depth_ft"] / d[:METER_TO_FEET]  # [m]
     d[:BoreSpacing] = d["borehole_spacing_ft"] / d[:METER_TO_FEET]  # [m]

@@ -1,7 +1,7 @@
 """
     ResultsStruct
 
-This struct gets updated in the GHPGHX.jl module and is used to record the results/outputs.
+This struct gets updated in the GhpGhx.jl module and is used to record the results/outputs.
 """
 Base.@kwdef mutable struct ResultsStruct
     # These get modified by the function below
@@ -52,7 +52,7 @@ end
 """
     init_sizing!(r::ResultsStruct, p::InputsStruct, size_iter::Int64)
 
-Performs the initial sizing for the GHPGHX.jl `size_borefield(p)` function.
+Performs the initial sizing for the GhpGhx.jl `size_borefield(p)` function.
 """
 function init_sizing!(r::ResultsStruct, p::InputsStruct, size_iter::Int64)
     #Changes each sizing iteration
@@ -73,11 +73,11 @@ function init_sizing!(r::ResultsStruct, p::InputsStruct, size_iter::Int64)
 end
 
 """
-    get_ghpghx_results_for_reopt(r::ResultsStruct, p::InputsStruct)
+    get_GhpGhx_results_for_reopt(r::ResultsStruct, p::InputsStruct)
 
 Extract the required results for input to REopt /job: average hourly dispatch performance and other summary performance metrics.
 """
-function get_ghpghx_results_for_reopt(r::ResultsStruct, p::InputsStruct)
+function get_GhpGhx_results_for_reopt(r::ResultsStruct, p::InputsStruct)
     results_dict = Dict{Any,Any}()
     results_dict["number_of_boreholes"] = r.N_Bores_Final
     results_dict["length_boreholes_ft"] = round(r.Length_Boreholes * p.METER_TO_FEET, digits=1)
