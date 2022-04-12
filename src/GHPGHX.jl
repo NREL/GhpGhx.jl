@@ -198,7 +198,7 @@ function size_borefield(p)
                         XIN[4] = p.AmbientTemperature[hr]
                         XIN[5] = 1.0
                         # Call the ground model
-                        ccall((:type557_, "/opt/julia_src/dst.so"), Cvoid, 
+                        ccall((:type557_, "../ghxmodel/dst.so"), Cvoid, 
                         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                     elseif p.ghx_model == "TESS"
@@ -206,7 +206,7 @@ function size_borefield(p)
                         XIN[2] = Mdot_GHX
                         XIN[3] = p.AmbientTemperature[hr]
                         XIN[4] = p.AmbientTemperature[hr]
-                        ccall((:type1373_, "/opt/julia_src/tess.so"), Cvoid, 
+                        ccall((:type1373_, "../ghxmodel/tess.so"), Cvoid, 
                         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                     end
@@ -253,11 +253,11 @@ function size_borefield(p)
                     # Call the ground heat exchanger model to clean up as the timestep is complete (assign Ti=Tf)
                     INFO[13] = 1
                     if p.ghx_model == "DST"
-                        ccall((:type557_, "/opt/julia_src/dst.so"), Cvoid, 
+                        ccall((:type557_, "../ghxmodel/dst.so"), Cvoid, 
                         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                     elseif p.ghx_model == "TESS"
-                        ccall((:type1373_, "/opt/julia_src/tess.so"), Cvoid, 
+                        ccall((:type1373_, "../ghxmodel/tess.so"), Cvoid, 
                         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                     end 
@@ -454,7 +454,7 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
         XIN[5] = 1.0
         
         # First time
-        ccall((:type557_, "/opt/julia_src/dst.so"), Cvoid, 
+        ccall((:type557_, "../ghxmodel/dst.so"), Cvoid, 
         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         
@@ -462,7 +462,7 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
         INFO[8] = 3
 
         # Second time
-        ccall((:type557_, "/opt/julia_src/dst.so"), Cvoid,
+        ccall((:type557_, "../ghxmodel/dst.so"), Cvoid,
         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
     elseif p.ghx_model == "TESS"
@@ -473,7 +473,7 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
         XIN[4] = 20.0
 
         # First time
-        ccall((:type1373_, "/opt/julia_src/tess.so"), Cvoid,
+        ccall((:type1373_, "../ghxmodel/tess.so"), Cvoid,
         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)        
 
@@ -481,7 +481,7 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
         INFO[8] = 3
 
         # Second time
-        ccall((:type1373_, "/opt/julia_src/tess.so"), Cvoid,
+        ccall((:type1373_, "../ghxmodel/tess.so"), Cvoid,
         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)         
     end
