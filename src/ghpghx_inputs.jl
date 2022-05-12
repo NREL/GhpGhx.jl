@@ -1,4 +1,3 @@
-# Using same struct type from REopt utils.jl
 # Warning: I've seen notes of Base.@kwdef not being officially supported (not documented)
 """
     InputsStruct
@@ -8,45 +7,45 @@ This struct defines the inputs for the GhpGhx module
 Base.@kwdef struct InputsStruct
     ##### These are the exact /GhpGhx POST names from the API #####
     # Parameters
-    borehole_depth_ft::Float64
-    ghx_header_depth_ft::Float64
-    borehole_spacing_ft::Float64
-    borehole_diameter_inch::Float64
-    borehole_spacing_type::String  # "rectangular" or "hexagonal"
-    ghx_pipe_outer_diameter_inch::Float64
-    ghx_pipe_wall_thickness_inch::Float64
-    ghx_pipe_thermal_conductivity_btu_per_hr_ft_f::Float64
-    ghx_shank_space_inch::Float64
-    ground_thermal_conductivity_btu_per_hr_ft_f::Float64
-    ground_mass_density_lb_per_ft3::Float64
-    ground_specific_heat_btu_per_lb_f::Float64
-    grout_thermal_conductivity_btu_per_hr_ft_f::Float64
-    ghx_fluid_specific_heat_btu_per_lb_f::Float64
-    ghx_fluid_mass_density_lb_per_ft3::Float64
-    ghx_fluid_thermal_conductivity_btu_per_hr_ft_f::Float64
-    ghx_fluid_dynamic_viscosity_lbm_per_ft_hr::Float64
-    ghx_fluid_flow_rate_gpm_per_ton::Float64
-    ghx_pump_power_watt_per_gpm::Float64
-    ghx_pump_min_speed_fraction::Float64
-    ghx_pump_power_exponent::Float64
-    max_eft_allowable_f::Float64
-    min_eft_allowable_f::Float64
+    borehole_depth_ft::Float64 = 400.0
+    ghx_header_depth_ft::Float64 = 4.0
+    borehole_spacing_ft::Float64 = 20.0
+    borehole_diameter_inch::Float64 = 5.0
+    borehole_spacing_type::String  = "rectangular"  # "rectangular" or "hexagonal"
+    ghx_pipe_outer_diameter_inch::Float64 = 1.66
+    ghx_pipe_wall_thickness_inch::Float64 = 0.16
+    ghx_pipe_thermal_conductivity_btu_per_hr_ft_f::Float64 = 0.25
+    ghx_shank_space_inch::Float64 = 2.5
+    ground_thermal_conductivity_btu_per_hr_ft_f::Float64 = NaN  # Default depends on climate zone
+    ground_mass_density_lb_per_ft3::Float64 = 162.3
+    ground_specific_heat_btu_per_lb_f::Float64 = 0.211
+    grout_thermal_conductivity_btu_per_hr_ft_f::Float64 = 1.0
+    ghx_fluid_specific_heat_btu_per_lb_f::Float64 = 1.0
+    ghx_fluid_mass_density_lb_per_ft3::Float64 = 62.4
+    ghx_fluid_thermal_conductivity_btu_per_hr_ft_f::Float64 = 0.34
+    ghx_fluid_dynamic_viscosity_lbm_per_ft_hr::Float64 = 2.75
+    ghx_fluid_flow_rate_gpm_per_ton::Float64 = 2.5
+    ghx_pump_power_watt_per_gpm::Float64 = 15.0
+    ghx_pump_min_speed_fraction::Float64 = 0.1
+    ghx_pump_power_exponent::Float64 = 2.2
+    max_eft_allowable_f::Float64 = 104.0
+    min_eft_allowable_f::Float64 = 23.0
     
     # Array/Dict inputs
-    heating_thermal_load_mmbtu_per_hr::Array{Float64,1}
-    cooling_thermal_load_ton::Array{Float64,1}
-    ambient_temperature_f::Array{Float64,1}
-    cop_map_eft_heating_cooling::Array{Any,1}
+    heating_thermal_load_mmbtu_per_hr::Array{Float64,1} = Float64[]
+    cooling_thermal_load_ton::Array{Float64,1} = Float64[]
+    ambient_temperature_f::Array{Float64,1} = Float64[]
+    cop_map_eft_heating_cooling::Array{Any,1} = NaN
 
     # Model Settings
-    simulation_years::Int64  # Number of years for GHP-GHX model
-    solver_eft_tolerance_f::Float64  # Tolerance for the EFT error to accept a GHX sizing solution
+    simulation_years::Int64 = 25  # Number of years for GHP-GHX model
+    solver_eft_tolerance_f::Float64 = 2.0  # Tolerance for the EFT error to accept a GHX sizing solution
     solver_eft_tolerance::Float64  # Convert to degC
-    ghx_model::String  # "TESS" or "DST"
-    dst_ghx_timesteps_per_hour::Int64
-    tess_ghx_minimum_timesteps_per_hour::Int64
-    max_sizing_iterations::Int64
-    init_sizing_factor_ft_per_peak_ton::Float64
+    ghx_model::String = "TESS" # "TESS" or "DST"
+    dst_ghx_timesteps_per_hour::Int64 = 12
+    tess_ghx_minimum_timesteps_per_hour::Int64 = 1
+    max_sizing_iterations::Int64 = 15
+    init_sizing_factor_ft_per_peak_ton::Float64 = 246.1
     
     ##### These are the variable names used in the GhpGhx, kept from TESS ######
     # TODO eventually just use the API names above in GhpGhx to remove redundancy (BUT WOULD HAVE TO DEAL WITH UNITS CONVERSION STILL)  
@@ -168,12 +167,24 @@ function InputsProcess(d::Dict)
     d[:Tamp_Ground] =  (maximum(avg_temp_month) - minimum(avg_temp_month)) / 2  # [C]
     d[:DayMin_Surface] = convert(Int64, round(argmin(d[:AmbientTemperature]) / 24))  # day of year
 
+    # Load in default COP map, if not input
+    if isNaN(cop_map_eft_heating_cooling)
+        cop_map_df = CSV.read("test/inputs/cop_map.csv", DataFrame)
+        # Generate a "records" style dictionary from the 
+        cop_map_list = []
+        for i in eachrow(cop_map_df)
+            dict_record = Dict(names(i)[k]=>i[names(i)[k]] for k in 1:length(names(i)))
+            push!(cop_map_list, dict_record)
+        end
+    else
+        cop_map_list = d["cop_map_eft_heating_cooling"]
+    end
     # Convert COP map list_of_dict to Array{Float64, 2}
-    d[:HeatPumpCOPMap] = zeros(Float64, length(d["cop_map_eft_heating_cooling"]), 3)
+    d[:HeatPumpCOPMap] = zeros(Float64, length(cop_map_list), 3)
     for i in 1:length(d["cop_map_eft_heating_cooling"])
-        d[:HeatPumpCOPMap][i,1] = d["cop_map_eft_heating_cooling"][i]["eft"]
-        d[:HeatPumpCOPMap][i,2] = d["cop_map_eft_heating_cooling"][i]["heat_cop"]
-        d[:HeatPumpCOPMap][i,3] = d["cop_map_eft_heating_cooling"][i]["cool_cop"]
+        d[:HeatPumpCOPMap][i,1] = cop_map_list[i]["eft"]
+        d[:HeatPumpCOPMap][i,2] = cop_map_list[i]["heat_cop"]
+        d[:HeatPumpCOPMap][i,3] = cop_map_list[i]["cool_cop"]
     end
 
     # Find peak heating, cooling, and combined for initial sizing guess
