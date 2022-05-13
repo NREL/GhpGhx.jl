@@ -206,9 +206,15 @@ function size_borefield(p)
                         XIN[2] = Mdot_GHX
                         XIN[3] = p.AmbientTemperature[hr]
                         XIN[4] = p.AmbientTemperature[hr]
-                        ccall((:type1373_, "../ghxmodel/tess.so"), Cvoid, 
-                        (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
-                        TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+                        if Sys.islinux() || Sys.isapple()
+                            ccall((:type1373_, "../ghxmodel/tess_linux.so"), Cvoid, 
+                            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+                        elseif Sys.iswindows()
+                            ccall((:type1373_, "../ghxmodel/tess_windows.so"), Cvoid, 
+                            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+                        end
                     end
 
                     # Calculate the outputs
@@ -257,9 +263,15 @@ function size_borefield(p)
                         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                     elseif p.ghx_model == "TESS"
-                        ccall((:type1373_, "../ghxmodel/tess.so"), Cvoid, 
-                        (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
-                        TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+                        if Sys.islinux() || Sys.isapple()
+                            ccall((:type1373_, "../ghxmodel/tess_linux.so"), Cvoid, 
+                            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+                        elseif Sys.iswindows()
+                            ccall((:type1373_, "../ghxmodel/tess_windows.so"), Cvoid, 
+                            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+                        end                 
                     end 
                     INFO[13] = 0
                 end
@@ -473,17 +485,29 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
         XIN[4] = 20.0
 
         # First time
-        ccall((:type1373_, "../ghxmodel/tess.so"), Cvoid,
-        (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
-        TimeArray, XIN, OUT, PAR, INFO, ErrorFound)        
+        if Sys.islinux() || Sys.isapple()
+            ccall((:type1373_, "../ghxmodel/tess_linux.so"), Cvoid, 
+            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+        elseif Sys.iswindows()
+            ccall((:type1373_, "../ghxmodel/tess_windows.so"), Cvoid, 
+            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+        end       
 
         INFO[7] = 0
         INFO[8] = 3
 
         # Second time
-        ccall((:type1373_, "../ghxmodel/tess.so"), Cvoid,
-        (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
-        TimeArray, XIN, OUT, PAR, INFO, ErrorFound)         
+        if Sys.islinux() || Sys.isapple()
+            ccall((:type1373_, "../ghxmodel/tess_linux.so"), Cvoid, 
+            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+        elseif Sys.iswindows()
+            ccall((:type1373_, "../ghxmodel/tess_windows.so"), Cvoid, 
+            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+        end        
     end
 end    
 

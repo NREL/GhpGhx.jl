@@ -35,7 +35,7 @@ Base.@kwdef struct InputsStruct
     heating_thermal_load_mmbtu_per_hr::Array{Float64,1} = Float64[]
     cooling_thermal_load_ton::Array{Float64,1} = Float64[]
     ambient_temperature_f::Array{Float64,1} = Float64[]
-    cop_map_eft_heating_cooling::Array{Any,1} = NaN
+    cop_map_eft_heating_cooling::Array{Any,1} = Dict[]
 
     # Model Settings
     simulation_years::Int64 = 25  # Number of years for GHP-GHX model
@@ -168,7 +168,7 @@ function InputsProcess(d::Dict)
     d[:DayMin_Surface] = convert(Int64, round(argmin(d[:AmbientTemperature]) / 24))  # day of year
 
     # Load in default COP map, if not input
-    if isNaN(cop_map_eft_heating_cooling)
+    if isempty(d["cop_map_eft_heating_cooling"])
         cop_map_df = CSV.read("test/inputs/cop_map.csv", DataFrame)
         # Generate a "records" style dictionary from the 
         cop_map_list = []
