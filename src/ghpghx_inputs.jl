@@ -103,6 +103,24 @@ Base.@kwdef struct InputsStruct
     Mdot_GHXPump::Float64
 end
 
+const ground_k_by_climate_zone = Dict([
+    ("1A", 1.029),
+    ("2A", 1.348),
+    ("2B", 0.917),
+    ("3A", 1.243),
+    ("3B", 1.364),
+    ("3C", 1.117),
+    ("4A", 1.023),
+    ("4B", 0.972),
+    ("4C", 1.418),
+    ("5A", 1.726),
+    ("5B", 1.177),
+    ("6A", 0.977),
+    ("6B", 0.981),
+    ("7", 1.271),
+    ("8", 1.189)
+])
+
 """
     InputsProcess(d::Dict)
 
