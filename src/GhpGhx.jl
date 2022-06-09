@@ -211,7 +211,7 @@ function size_borefield(p)
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         elseif Sys.iswindows()
-                            ccall((:type1373_, "ghxmodel/tess_windows.so"), Cvoid, 
+                            ccall((:type1373_, "tess_windows.so"), Cvoid, 
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         end
@@ -268,7 +268,7 @@ function size_borefield(p)
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         elseif Sys.iswindows()
-                            ccall((:type1373_, "ghxmodel/tess_windows.so"), Cvoid, 
+                            ccall((:type1373_, "tess_windows.so"), Cvoid, 
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         end                 
@@ -489,10 +489,9 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
             ccall((:type1373_, "../ghxmodel/tess_linux.so"), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
-        elseif Sys.iswindows() 
-            # ccall in Windows (at least) is not able to find the relative path ("../ghxmodel"), so first have to cd("..")
-            cd("..")
-            ccall((:type1373_, "ghxmodel/tess_windows.so"), Cvoid, 
+        elseif Sys.iswindows()
+            println("pwd() = ", pwd())
+            ccall((:type1373_, "tess_windows.so"), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         end       
@@ -506,7 +505,7 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         elseif Sys.iswindows()
-            ccall((:type1373_, "ghxmodel/tess_windows.so"), Cvoid, 
+            ccall((:type1373_, "tess_windows.so"), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         end        
