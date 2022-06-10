@@ -7,6 +7,10 @@ include("GhpGhx_inputs.jl")
 
 include("GhpGhx_results.jl")
 
+# Give full access/permission to the executable .so file (777 is all permissions, 755 is only read/execute by non-owners)
+lib = normpath(joinpath(@__DIR__,"../ghxmodel"))
+chmod(lib, filemode(lib) | 0o755; recursive=true)
+
 """
     ghp_model(d)
 
@@ -465,9 +469,7 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
         XIN[4] = 20.0
         XIN[5] = 1.0
         
-        # First time
-        lib = normpath(joinpath(@__DIR__,"../ghxmodel/dst.so"))
-        chmod(lib, filemode(lib) | 0o755)        
+        # First time     
         ccall((:type557_, normpath(joinpath(@__DIR__,"../ghxmodel/dst.so"))), Cvoid, 
         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
@@ -488,16 +490,10 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
 
         # First time
         if Sys.islinux() || Sys.isapple()
-            # Give full access/permission to the executable .so file
-            lib = normpath(joinpath(@__DIR__,"../ghxmodel/tess_linux.so"))
-            chmod(lib, filemode(lib) | 0o755)
             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_linux.so"))), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         elseif Sys.iswindows()
-            # Give full access/permission to the executable .so file
-            lib = normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))
-            chmod(lib, filemode(lib) | 0o755)
             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
