@@ -7,9 +7,6 @@ include("GhpGhx_inputs.jl")
 
 include("GhpGhx_results.jl")
 
-# Give full access/permission to the executable .so file (777 is all permissions, 755 is only read/execute by non-owners)
-lib = normpath(joinpath(@__DIR__,"../ghxmodel"))
-chmod(lib, filemode(lib) | 0o755; recursive=true)
 
 """
     ghp_model(d)
@@ -215,6 +212,10 @@ function size_borefield(p)
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         elseif Sys.iswindows()
+                            if year ==1 && hr == 1 && step == 1
+                                lib = normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))
+                                chmod(lib, filemode(lib) | 0o755)
+                            end
                             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
@@ -494,6 +495,9 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         elseif Sys.iswindows()
+            # Give full access/permission to the executable .so file (777 is all permissions, 755 is only read/execute by non-owners)
+            lib = normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))
+            chmod(lib, filemode(lib) | 0o755)
             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
@@ -509,6 +513,8 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         elseif Sys.iswindows()
+            lib = normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))
+            chmod(lib, filemode(lib) | 0o755)
             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
