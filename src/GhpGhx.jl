@@ -36,6 +36,8 @@ Return the mutated results struct.
 
 """
 function size_borefield(p)
+    lib = normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))
+    chmod(lib, filemode(lib) | 0o755)
     # Declare and initialize arrays which get passed and mutated by GHX model (different length arrays used for different models)
     INFO = zeros(Int32, 15)  # Used for initialization and incrementing the number of times the GHX model is called by timestep
     if p.ghx_model == "DST"
@@ -212,10 +214,6 @@ function size_borefield(p)
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         elseif Sys.iswindows()
-                            if year ==1 && hr == 1 && step == 1
-                                lib = normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))
-                                chmod(lib, filemode(lib) | 0o755)
-                            end
                             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
@@ -457,6 +455,9 @@ Run the initial two (2) GHX Fortran subroutines using initialization parameters.
 
 """
 function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
+    # Give full access/permission to the executable .so file (777 is all permissions, 755 is only read/execute by non-owners)
+    lib = normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))
+    chmod(lib, filemode(lib) | 0o755)
     # Call the GHX model two times for initialization
     INFO[1] = 1
     INFO[7] = -1
@@ -495,13 +496,9 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         elseif Sys.iswindows()
-            # Give full access/permission to the executable .so file (777 is all permissions, 755 is only read/execute by non-owners)
-            lib = normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))
-            chmod(lib, filemode(lib) | 0o755)
             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
-            println("success")
         end       
 
         INFO[7] = 0
@@ -513,8 +510,6 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         elseif Sys.iswindows()
-            lib = normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))
-            chmod(lib, filemode(lib) | 0o755)
             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
