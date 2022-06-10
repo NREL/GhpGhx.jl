@@ -198,7 +198,7 @@ function size_borefield(p)
                         XIN[4] = p.AmbientTemperature[hr]
                         XIN[5] = 1.0
                         # Call the ground model
-                        ccall((:type557_, "../ghxmodel/dst.so"), Cvoid, 
+                        ccall((:type557_, normpath(joinpath(@__DIR__,"../ghxmodel/dst.so"))), Cvoid, 
                         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                     elseif p.ghx_model == "TESS"
@@ -207,11 +207,11 @@ function size_borefield(p)
                         XIN[3] = p.AmbientTemperature[hr]
                         XIN[4] = p.AmbientTemperature[hr]
                         if Sys.islinux() || Sys.isapple()
-                            ccall((:type1373_, "../ghxmodel/tess_linux.so"), Cvoid, 
+                            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_linux.so"))), Cvoid, 
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         elseif Sys.iswindows()
-                            ccall((:type1373_, "tess_windows.so"), Cvoid, 
+                            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         end
@@ -259,16 +259,16 @@ function size_borefield(p)
                     # Call the ground heat exchanger model to clean up as the timestep is complete (assign Ti=Tf)
                     INFO[13] = 1
                     if p.ghx_model == "DST"
-                        ccall((:type557_, "../ghxmodel/dst.so"), Cvoid, 
+                        ccall((:type557_, normpath(joinpath(@__DIR__,"../ghxmodel/dst.so"))), Cvoid, 
                         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                     elseif p.ghx_model == "TESS"
                         if Sys.islinux() || Sys.isapple()
-                            ccall((:type1373_, "../ghxmodel/tess_linux.so"), Cvoid, 
+                            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_linux.so"))), Cvoid, 
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         elseif Sys.iswindows()
-                            ccall((:type1373_, "tess_windows.so"), Cvoid, 
+                            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         end                 
@@ -466,7 +466,7 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
         XIN[5] = 1.0
         
         # First time
-        ccall((:type557_, "../ghxmodel/dst.so"), Cvoid, 
+        ccall((:type557_, normpath(joinpath(@__DIR__,"../ghxmodel/dst.so"))), Cvoid, 
         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         
@@ -474,7 +474,7 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
         INFO[8] = 3
 
         # Second time
-        ccall((:type557_, "../ghxmodel/dst.so"), Cvoid,
+        ccall((:type557_, normpath(joinpath(@__DIR__,"../ghxmodel/dst.so"))), Cvoid,
         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
     elseif p.ghx_model == "TESS"
@@ -486,14 +486,14 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
 
         # First time
         if Sys.islinux() || Sys.isapple()
-            ccall((:type1373_, "../ghxmodel/tess_linux.so"), Cvoid, 
+            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_linux.so"))), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         elseif Sys.iswindows()
-            println("pwd() = ", pwd())
-            ccall((:type1373_, "tess_windows.so"), Cvoid, 
+            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+            println("success")
         end       
 
         INFO[7] = 0
@@ -501,11 +501,11 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
 
         # Second time
         if Sys.islinux() || Sys.isapple()
-            ccall((:type1373_, "../ghxmodel/tess_linux.so"), Cvoid, 
+            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_linux.so"))), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         elseif Sys.iswindows()
-            ccall((:type1373_, "tess_windows.so"), Cvoid, 
+            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         end        
