@@ -155,8 +155,8 @@ function InputsProcess(d::Dict)
     d = InputsStruct(; d...)
 
     # Constants
-    d.TON_TO_KW = 3.5169  # [kw/ton]
-    d.MMBTU_TO_KWH = 293.07  # [kwh/MMBtu]
+    d.TON_TO_KW = 3.51685  # [kw/ton]
+    d.MMBTU_TO_KWH = 293.0107  # [kwh/MMBtu]
     d.METER_TO_FEET= 3.28084  # [ft/m]
 
     # Convert API inputs to GhpGhx variable names, and units from English to SI
