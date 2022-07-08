@@ -3,9 +3,9 @@ module GhpGhx
 export ghp_model
 export get_GhpGhx_results_for_reopt
 
-include("GhpGhx_inputs.jl")
+include("inputs.jl")
 
-include("GhpGhx_results.jl")
+include("results.jl")
 
 
 """

@@ -77,7 +77,7 @@ end
 
 Extract the required results for input to REopt /job: average hourly dispatch performance and other summary performance metrics.
 """
-function get_GhpGhx_results_for_reopt(r::ResultsStruct, p::InputsStruct)
+function get_results_for_reopt(r::ResultsStruct, p::InputsStruct)
     results_dict = Dict{Any,Any}()
     results_dict["number_of_boreholes"] = r.N_Bores_Final
     results_dict["length_boreholes_ft"] = round(r.Length_Boreholes * p.METER_TO_FEET, digits=1)
