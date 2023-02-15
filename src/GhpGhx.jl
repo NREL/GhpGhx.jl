@@ -176,7 +176,7 @@ function size_borefield(p)
                     elseif r.Qnet_RunningTotal > 0.0
                         DT_GHX_Now = 0.2
                     else
-                        DT_GHX_Now = 0.
+                        DT_GHX_Now = 0.0
                     end
                     
                     Mdot_GHX = GPM_GHX * 60.0 / 264.172 * p.Rho_GHXFluid
