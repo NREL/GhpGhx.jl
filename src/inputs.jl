@@ -30,6 +30,7 @@ Base.@kwdef mutable struct InputsStruct
     ghx_pump_power_exponent::Float64 = 2.2
     max_eft_allowable_f::Float64 = 104.0
     min_eft_allowable_f::Float64 = 23.0
+    hybrid_sizing_flag::Float64 = 0.0
     
     # Array/Dict inputs
     heating_thermal_load_mmbtu_per_hr::Array{Float64,1} = Float64[]
@@ -76,6 +77,7 @@ Base.@kwdef mutable struct InputsStruct
     Exponent_GHXPump::Float64 = NaN  #!Exponent for relationship between ground heat exchanger pump power and ground heat exchanger pump flow rate
     Tmax_Sizing::Float64 = NaN  #!Maximum allowable return fluid temperature from the ground loop (F)
     Tmin_Sizing::Float64 = NaN  #!Minimum allowable return fluid temperature from the ground loop (F)    
+    f_HybridSize::Float64 = NaN #Flag for hybrid GHX sizing (Modes - size for heating: -2; size for cooling: -1, size as a fraction of non-hybrid GHX: 0-2)
 
     # Additional parameters and site data
     HeatingThermalLoadKW::Array{Float64, 1} = Float64[]  # Heating thermal load to be served by GHP

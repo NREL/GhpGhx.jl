@@ -38,6 +38,8 @@ Base.@kwdef mutable struct ResultsStruct
     Q_GHX_Bottom::Float64 = 0.0
     Q_GHX_Stored::Float64 = 0.0
     Qf_GHX_Stored::Float64 = 0.0
+    Q_AuxHeat_Total::Float64 = 0.0
+    Q_AuxCool_Total::Float64 = 0.0
 
     # Array results
     total_hours::Int64  # Required argument to be passed by InputsStruct
@@ -46,6 +48,8 @@ Base.@kwdef mutable struct ResultsStruct
     P_WSHPc_Hourly::Array{Float64, 1} = zeros(total_hours)
     Qh_Hourly::Array{Float64, 1} = zeros(total_hours)
     Qc_Hourly::Array{Float64, 1} = zeros(total_hours)
+    Q_AuxHeat_Hourly::Array{Float64, 1} = zeros(total_hours)
+    Q_AuxCool_Hourly::Array{Float64, 1} = zeros(total_hours)
     EWT::Array{Float64, 1} = zeros(total_hours)
 end
 
