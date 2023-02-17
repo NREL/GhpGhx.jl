@@ -27,7 +27,7 @@ inputs_dict["ground_thermal_conductivity_btu_per_hr_ft_f"] = 1.2
 @info "Starting GhpGhx" #with timeout of $(timeout) seconds..."
 results, inputs_params = GhpGhx.ghp_model(inputs_dict)
 # Create a dictionary of the results data needed for REopt
-GhpGhx_results = GhpGhx.get_GhpGhx_results_for_reopt(results, inputs_params)
+GhpGhx_results = GhpGhx.get_results_for_reopt(results, inputs_params)
 @info "GhpGhx model solved" #with status $(results["status"])."
 
 

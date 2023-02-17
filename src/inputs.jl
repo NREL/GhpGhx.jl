@@ -1,4 +1,36 @@
-# Warning: I've seen notes of Base.@kwdef not being officially supported (not documented)
+# Define some constant data structures for default inputs in InputsStruct
+const ground_k_by_climate_zone = Dict([
+    ("1A", 1.029),
+    ("2A", 1.348),
+    ("2B", 0.917),
+    ("3A", 1.243),
+    ("3B", 1.364),
+    ("3C", 1.117),
+    ("4A", 1.023),
+    ("4B", 0.972),
+    ("4C", 1.418),
+    ("5A", 1.726),
+    ("5B", 1.177),
+    ("6A", 0.977),
+    ("6B", 0.981),
+    ("7", 1.271),
+    ("8", 1.189)
+])
+
+const default_cop_map_list = [
+    Dict{String, Real}("eft" => 20, "cool_cop" => 11.023, "heat_cop" => 3.351)
+    Dict{String, Real}("eft" => 30, "cool_cop" => 11.023, "heat_cop" => 3.639)
+    Dict{String, Real}("eft" => 40, "cool_cop" => 11.023, "heat_cop" => 4.161)
+    Dict{String, Real}("eft" => 50, "cool_cop" => 10.481, "heat_cop" => 4.681)
+    Dict{String, Real}("eft" => 60, "cool_cop" => 9.168, "heat_cop" => 5.081) 
+    Dict{String, Real}("eft" => 70, "cool_cop" => 7.263, "heat_cop" => 5.678) 
+    Dict{String, Real}("eft" => 80, "cool_cop" => 5.826, "heat_cop" => 6.047) 
+    Dict{String, Real}("eft" => 90, "cool_cop" => 4.803, "heat_cop" => 6.341) 
+    Dict{String, Real}("eft" => 100, "cool_cop" => 3.9, "heat_cop" => 6.341)  
+    Dict{String, Real}("eft" => 110, "cool_cop" => 3.279, "heat_cop" => 6.341)
+    Dict{String, Real}("eft" => 120, "cool_cop" => 2.707, "heat_cop" => 6.341)
+]
+
 """
     InputsStruct
 
@@ -105,23 +137,6 @@ Base.@kwdef mutable struct InputsStruct
     Mdot_GHXPump::Float64 = NaN
 end
 
-const ground_k_by_climate_zone = Dict([
-    ("1A", 1.029),
-    ("2A", 1.348),
-    ("2B", 0.917),
-    ("3A", 1.243),
-    ("3B", 1.364),
-    ("3C", 1.117),
-    ("4A", 1.023),
-    ("4B", 0.972),
-    ("4C", 1.418),
-    ("5A", 1.726),
-    ("5B", 1.177),
-    ("6A", 0.977),
-    ("6B", 0.981),
-    ("7", 1.271),
-    ("8", 1.189)
-])
 
 """
     InputsProcess(d::Dict)
@@ -135,19 +150,13 @@ function InputsProcess(d::Dict)
 
     # Load in default COP map, if not input, which is a NON-keyword argument, so required for InputsStruct instantiation
     if !haskey(d, :cop_map_eft_heating_cooling) || isempty(d[:cop_map_eft_heating_cooling])
-        cop_map_df = CSV.read("test/inputs/cop_map.csv", DataFrame)
-        # Generate a "records" style dictionary from the 
-        cop_map_list = []
-        for i in eachrow(cop_map_df)
-            dict_record = Dict(names(i)[k]=>i[names(i)[k]] for k in 1:length(names(i)))
-            push!(cop_map_list, dict_record)
-        end
+        cop_map_list = deepcopy(default_cop_map_list)
     else
         cop_map_list = d[:cop_map_eft_heating_cooling]
     end
     # Convert COP map list_of_dict to Matrix{Float64} (alias for Array{Float64, 2})
     d[:HeatPumpCOPMap] = zeros(Float64, length(cop_map_list), 3)
-    for i in 1:length(d[:cop_map_eft_heating_cooling])
+    for i in eachindex(cop_map_list)
         d[:HeatPumpCOPMap][i,1] = cop_map_list[i]["eft"]
         d[:HeatPumpCOPMap][i,2] = cop_map_list[i]["heat_cop"]
         d[:HeatPumpCOPMap][i,3] = cop_map_list[i]["cool_cop"]

@@ -40,6 +40,10 @@ Base.@kwdef mutable struct ResultsStruct
     Qf_GHX_Stored::Float64 = 0.0
     Q_AuxHeat_Total::Float64 = 0.0
     Q_AuxCool_Total::Float64 = 0.0
+    Qf_GHXPump::Float64 = 0.0
+    Qnet_GHX::Float64 = 0.0
+    Qnet_HeatPumps::Float64 = 0.0
+    Qnet_RunningTotal::Float64 = 0.0
 
     # Array results
     total_hours::Int64  # Required argument to be passed by InputsStruct

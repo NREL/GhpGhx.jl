@@ -201,11 +201,21 @@ function size_borefield(p)
                     else
                         GPM_GHX = 0.0
                     end
+
+                    # Try to re-capture some of the imbalance from the GHX model and the heat pump model
+                    r.Qnet_RunningTotal += r.Qnet_HeatPumps - r.Qnet_GHX + r.Qf_GHXPump
+                    if r.Qnet_RunningTotal < 0 
+                        DT_GHX_Now = -0.2
+                    elseif r.Qnet_RunningTotal > 0.0
+                        DT_GHX_Now = 0.2
+                    else
+                        DT_GHX_Now = 0.0
+                    end
                     
                     Mdot_GHX = GPM_GHX * 60.0 / 264.172 * p.Rho_GHXFluid
                     
                     if Mdot_GHX > 0.0
-                        Tout_HeatPumps_GHX = Tout_GHX + (Q_Rejected - Q_Absorbed) / Mdot_GHX / p.Cp_GHXFluid
+                        Tout_HeatPumps_GHX = Tout_GHX + (Q_Rejected - Q_Absorbed) / Mdot_GHX / p.Cp_GHXFluid + DT_GHX_Now
                     else
                         Tout_HeatPumps_GHX = Tout_GHX
                     end
@@ -218,9 +228,9 @@ function size_borefield(p)
                     end
                     
                     P_GHXPump = p.Prated_GHXPump * (f_GHXPump^p.Exponent_GHXPump)
-                    Qf_GHXPump = P_GHXPump * 0.3
+                    r.Qf_GHXPump = P_GHXPump * 0.3
                     if Mdot_GHX > 0.0
-                        Tout_Pump = Tout_HeatPumps_GHX + Qf_GHXPump / Mdot_GHX / p.Cp_GHXFluid
+                        Tout_Pump = Tout_HeatPumps_GHX + r.Qf_GHXPump / Mdot_GHX / p.Cp_GHXFluid
                     else
                         Tout_Pump = Tout_HeatPumps_GHX
                     end
@@ -259,7 +269,7 @@ function size_borefield(p)
                     r.Tmin_GHX = min(r.Tmin_GHX, OUT[1])
 
                     r.Power_GHXPump += P_GHXPump * Delt
-                    r.Qfluid_GHXPump += Qf_GHXPump * Delt
+                    r.Qfluid_GHXPump += r.Qf_GHXPump * Delt
                     r.Power_WSHP_C += P_WSHP_C * Delt
                     r.Power_WSHP_H += P_WSHP_H * Delt
                     r.LoadMet_WSHP_C += Q_Cool * Delt
