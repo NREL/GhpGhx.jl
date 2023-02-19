@@ -349,10 +349,10 @@ function size_borefield(p)
         if (abs(FX_Cooling) < p.solver_eft_tolerance) && (abs(FX_Heating) < p.solver_eft_tolerance)
             r.FX_Now[size_iter] = min(FX_Cooling, FX_Heating)
             break
-        elseif (abs(FX_Cooling) < p.solver_eft_tolerance) && (FX_Heating > 0.0)
+        elseif (abs(FX_Cooling) < p.solver_eft_tolerance) && (FX_Heating > 0.0) && (!SizeForHeating)
             r.FX_Now[size_iter] = FX_Cooling
             break
-        elseif (abs(FX_Heating) < p.solver_eft_tolerance) && (FX_Cooling > 0.0)
+        elseif (abs(FX_Heating) < p.solver_eft_tolerance) && (FX_Cooling > 0.0) && (!SizeForCooling)
             r.FX_Now[size_iter] = FX_Heating
             break
         end
@@ -424,12 +424,18 @@ function size_borefield(p)
                 if (r.FX_Now[size_iter] < 0) && (r.FX_Now[size_iter-1] > 0)
                     if !FinalSizingRun && f_HybridSize > 0 && f_HybridSize != 1
                         FinalSizingRun = true
+                        SizeForCooling = true
+                        SizeForHeating = true
+                        r.X_Now[size_iter+1] = r.X_Now[size_iter+1] * f_HybridSize
                     else
                         break    
                     end
                 elseif (r.FX_Now[size_iter] > 0) && (r.FX_Now[size_iter-1] < 0)
                     if !FinalSizingRun && f_HybridSize > 0 && f_HybridSize != 1
                         FinalSizingRun = true
+                        SizeForCooling = true
+                        SizeForHeating = true
+                        r.X_Now[size_iter+1] = r.X_Now[size_iter+1] * f_HybridSize
                     else
                         break
                     end

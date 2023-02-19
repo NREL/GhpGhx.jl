@@ -170,6 +170,9 @@ function InputsProcess(d::Dict)
     d.MMBTU_TO_KWH = 293.0107  # [kwh/MMBtu]
     d.METER_TO_FEET= 3.28084  # [ft/m]
 
+    # Hybrid Flag
+    d.f_HybridSize = d.hybrid_sizing_flag
+
     # Convert API inputs to GhpGhx variable names, and units from English to SI
     d.Depth_Bores=  d.borehole_depth_ft/ d.METER_TO_FEET # [m]
     d.Depth_Header= d.ghx_header_depth_ft/ d.METER_TO_FEET # [m]
