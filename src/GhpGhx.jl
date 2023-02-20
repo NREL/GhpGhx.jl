@@ -142,7 +142,6 @@ function size_borefield(p)
                     INFO[7] = 0
                     INFO[8] += 1
                     Tout_GHX = OUT[1]  # [C] This is always OUT[1] for ANY GHX model, but if that changes need to update                  
-                    EWT_F = Tout_GHX * 1.8 + 32.0  # [F] 
 
                     # Hybrid
                     if SizeForCooling && Tout_GHX < p.Tmin_Sizing
@@ -156,6 +155,8 @@ function size_borefield(p)
                         Q_AuxiliaryCool = 0
                         Tout_Auxiliary = Tout_GHX
                     end 
+
+                    EWT_F = Tout_Auxiliary * 1.8 + 32.0  # [F] 
 
                     # Find COP_Heat (Col 2) and COP_Cool (Col 3) based on temperature (Col 1) map; use interpolation between data points
                     if EWT_F <= p.HeatPumpCOPMap[1, 1]
@@ -215,9 +216,9 @@ function size_borefield(p)
                     Mdot_GHX = GPM_GHX * 60.0 / 264.172 * p.Rho_GHXFluid
                     
                     if Mdot_GHX > 0.0
-                        Tout_HeatPumps_GHX = Tout_GHX + (Q_Rejected - Q_Absorbed) / Mdot_GHX / p.Cp_GHXFluid + DT_GHX_Now
+                        Tout_HeatPumps_GHX = Tout_Auxiliary + (Q_Rejected - Q_Absorbed) / Mdot_GHX / p.Cp_GHXFluid + DT_GHX_Now
                     else
-                        Tout_HeatPumps_GHX = Tout_GHX
+                        Tout_HeatPumps_GHX = Tout_Auxiliary
                     end
 
                     # Calculate the pump outputs
