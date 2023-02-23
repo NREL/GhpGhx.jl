@@ -52,8 +52,8 @@ Base.@kwdef mutable struct ResultsStruct
     P_WSHPc_Hourly::Array{Float64, 1} = zeros(total_hours)
     Qh_Hourly::Array{Float64, 1} = zeros(total_hours)
     Qc_Hourly::Array{Float64, 1} = zeros(total_hours)
-    Q_AuxHeat_Hourly::Array{Float64, 1} = zeros(total_hours)
-    Q_AuxCool_Hourly::Array{Float64, 1} = zeros(total_hours)
+    QauxHt_Hourly::Array{Float64, 1} = zeros(total_hours)
+    QauxCl_Hourly::Array{Float64, 1} = zeros(total_hours)
     EWT::Array{Float64, 1} = zeros(total_hours)
 end
 

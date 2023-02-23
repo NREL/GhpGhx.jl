@@ -279,6 +279,10 @@ function size_borefield(p)
                     r.Q_Absorbed_Total += Q_Absorbed * Delt
                     r.Q_GHX_Net += (Q_Rejected - Q_Absorbed) * Delt
                     
+                    # Hybrid
+                    r.Q_AuxCool_Total += Q_AuxiliaryCool * Delt
+                    r.Q_AuxHeat_Total += Q_AuxiliaryHeat * Delt
+
                     if p.ghx_model == "DST"
                         r.Q_GHX_In += OUT[4] * Delt
                         r.Q_GHX_Top += OUT[5] * Delt
@@ -302,6 +306,10 @@ function size_borefield(p)
                     r.P_WSHPh_Hourly[8760*(year-1)+hr] += P_WSHP_H * Delt / 3600.0
                     r.Qc_Hourly[8760*(year-1)+hr] += Q_Cool * Delt / 3600.0
                     r.Qh_Hourly[8760*(year-1)+hr] += Q_Heat * Delt / 3600.0
+
+                    # Hybrid
+                    r.QauxHt_Hourly[8760*(year-1)+hr] += Q_AuxiliaryHeat * Delt / 3600.
+                    r.QauxCl_Hourly[8760*(year-1)+hr] += Q_AuxiliaryCool * Delt / 3600.
 
                     # Call the ground heat exchanger model to clean up as the timestep is complete (assign Ti=Tf)
                     INFO[13] = 1
