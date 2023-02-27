@@ -147,9 +147,11 @@ function size_borefield(p)
                     if SizeForCooling && Tout_GHX < p.Tmin_Sizing
                         Tout_Auxiliary = p.Tmin_Sizing
                         Q_AuxiliaryHeat = Mdot_GHX * p.Cp_GHXFluid * (p.Tmin_Sizing - Tout_GHX)
+                        Q_AuxiliaryCool = 0
                     elseif SizeForHeating && Tout_GHX > p.Tmax_Sizing
                         Tout_Auxiliary = p.Tmax_Sizing
                         Q_AuxiliaryCool = Mdot_GHX * p.Cp_GHXFluid * (Tout_GHX - p.Tmax_Sizing)
+                        Q_AuxiliaryHeat = 0
                     else
                         Q_AuxiliaryHeat = 0
                         Q_AuxiliaryCool = 0
