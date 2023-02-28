@@ -63,7 +63,10 @@ Base.@kwdef mutable struct InputsStruct
     max_eft_allowable_f::Float64 = 104.0
     min_eft_allowable_f::Float64 = 23.0
     hybrid_sizing_flag::Float64 = 1.0
-    
+    is_heating_electric::Bool = true
+    auxiliary_boiler_efficiency::Float64 = 0.98
+    auxiliary_cooling_tower_efficiency_kwe_per_kwt::Float64 = 0.2
+
     # Array/Dict inputs
     heating_thermal_load_mmbtu_per_hr::Array{Float64,1} = Float64[]
     cooling_thermal_load_ton::Array{Float64,1} = Float64[]
