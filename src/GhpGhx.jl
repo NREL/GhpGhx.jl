@@ -310,8 +310,8 @@ function size_borefield(p)
                     r.Qh_Hourly[8760*(year-1)+hr] += Q_Heat * Delt / 3600.0
 
                     # Hybrid
-                    r.QauxHt_Hourly[8760*(year-1)+hr] += Q_AuxiliaryHeat * Delt / 3600.
-                    r.QauxCl_Hourly[8760*(year-1)+hr] += Q_AuxiliaryCool * Delt / 3600.
+                    r.QauxHt_Hourly[8760*(year-1)+hr] += Q_AuxiliaryHeat * Delt / 3600. #kWt
+                    r.QauxCl_Hourly[8760*(year-1)+hr] += Q_AuxiliaryCool * Delt / 3600. #kWt
 
                     # Call the ground heat exchanger model to clean up as the timestep is complete (assign Ti=Tf)
                     INFO[13] = 1
