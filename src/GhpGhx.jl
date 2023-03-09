@@ -71,6 +71,25 @@ function size_borefield(p)
                         total_hours = p.simulation_years * 8760)
     init_sizing!(r, p, size_iter)  # Only modifies r, not p
     
+    #Define hybrid sizing parameters
+    if p.f_HybridSize < -1.5
+        SizeForHeating = true
+        SizeForCooling = false
+        f_HybridSize = 1
+    elseif p.f_HybridSize < -0.5
+        SizeForHeating = false
+        SizeForCooling = true
+        f_HybridSize = 1
+    elseif p.f_HybridSize <= 0
+        SizeForHeating = false
+        SizeForCooling = false
+        ErrorFound = [true]
+    else
+        SizeForHeating = false
+        SizeForCooling = false
+    end
+    FinalSizingRun = false
+
     #Set the parameters for the ground model
     assign_PAR!(p, r, PAR, size_iter)
 
@@ -123,7 +142,24 @@ function size_borefield(p)
                     INFO[7] = 0
                     INFO[8] += 1
                     Tout_GHX = OUT[1]  # [C] This is always OUT[1] for ANY GHX model, but if that changes need to update                  
-                    EWT_F = Tout_GHX * 1.8 + 32.0  # [F] 
+
+                    # Hybrid
+                    if SizeForCooling && Tout_GHX < p.Tmin_Sizing
+                        Tout_Auxiliary = p.Tmin_Sizing
+                        Q_AuxiliaryHeat = Mdot_GHX * p.Cp_GHXFluid * (p.Tmin_Sizing - Tout_GHX)
+                        Q_AuxiliaryCool = 0
+                    elseif SizeForHeating && Tout_GHX > p.Tmax_Sizing
+                        Tout_Auxiliary = p.Tmax_Sizing
+                        Q_AuxiliaryCool = Mdot_GHX * p.Cp_GHXFluid * (Tout_GHX - p.Tmax_Sizing)
+                        Q_AuxiliaryHeat = 0
+                    else
+                        Q_AuxiliaryHeat = 0
+                        Q_AuxiliaryCool = 0
+                        Tout_Auxiliary = Tout_GHX
+                    end 
+
+                    EWT_F = Tout_Auxiliary * 1.8 + 32.0  # [F] 
+
                     # Find COP_Heat (Col 2) and COP_Cool (Col 3) based on temperature (Col 1) map; use interpolation between data points
                     if EWT_F <= p.HeatPumpCOPMap[1, 1]
                         COP_Heat = p.HeatPumpCOPMap[1, 2]
@@ -182,9 +218,9 @@ function size_borefield(p)
                     Mdot_GHX = GPM_GHX * 60.0 / 264.172 * p.Rho_GHXFluid
                     
                     if Mdot_GHX > 0.0
-                        Tout_HeatPumps_GHX = Tout_GHX + (Q_Rejected - Q_Absorbed) / Mdot_GHX / p.Cp_GHXFluid + DT_GHX_Now
+                        Tout_HeatPumps_GHX = Tout_Auxiliary + (Q_Rejected - Q_Absorbed) / Mdot_GHX / p.Cp_GHXFluid + DT_GHX_Now
                     else
-                        Tout_HeatPumps_GHX = Tout_GHX
+                        Tout_HeatPumps_GHX = Tout_Auxiliary
                     end
 
                     # Calculate the pump outputs
@@ -245,6 +281,10 @@ function size_borefield(p)
                     r.Q_Absorbed_Total += Q_Absorbed * Delt
                     r.Q_GHX_Net += (Q_Rejected - Q_Absorbed) * Delt
                     
+                    # Hybrid
+                    r.Q_AuxCool_Total += Q_AuxiliaryCool * Delt
+                    r.Q_AuxHeat_Total += Q_AuxiliaryHeat * Delt
+
                     if p.ghx_model == "DST"
                         r.Q_GHX_In += OUT[4] * Delt
                         r.Q_GHX_Top += OUT[5] * Delt
@@ -268,6 +308,10 @@ function size_borefield(p)
                     r.P_WSHPh_Hourly[8760*(year-1)+hr] += P_WSHP_H * Delt / 3600.0
                     r.Qc_Hourly[8760*(year-1)+hr] += Q_Cool * Delt / 3600.0
                     r.Qh_Hourly[8760*(year-1)+hr] += Q_Heat * Delt / 3600.0
+
+                    # Hybrid
+                    r.QauxHt_Hourly[8760*(year-1)+hr] += Q_AuxiliaryHeat * Delt / 3600. #kWt
+                    r.QauxCl_Hourly[8760*(year-1)+hr] += Q_AuxiliaryCool * Delt / 3600. #kWt
 
                     # Call the ground heat exchanger model to clean up as the timestep is complete (assign Ti=Tf)
                     INFO[13] = 1
@@ -294,16 +338,32 @@ function size_borefield(p)
         # Use a Newton's method to calculate the bore size to meet the design goals
         # FX => error of temperature limits
         r.N_Bores_Final = r.N_Bores[size_iter]
-        FX_Cooling = p.Tmax_Sizing - r.Tmax_GHX
-        FX_Heating = r.Tmin_GHX - p.Tmin_Sizing
+
+        # Hybrid
+        if FinalSizingRun
+            break
+        end
+
+        # Hybrid
+        if SizeForHeating
+            FX_Cooling = 0
+            FX_Heating = r.Tmin_GHX - p.Tmin_Sizing
+        elseif SizeForCooling
+            FX_Cooling = p.Tmax_Sizing - r.Tmax_GHX
+            FX_Heating = 0
+        else 
+            FX_Cooling = p.Tmax_Sizing - r.Tmax_GHX
+            FX_Heating = r.Tmin_GHX - p.Tmin_Sizing
+        end
+
         # If tolerance is met for either heating or cooling, break the while loop and accept size solution
         if (abs(FX_Cooling) < p.solver_eft_tolerance) && (abs(FX_Heating) < p.solver_eft_tolerance)
             r.FX_Now[size_iter] = min(FX_Cooling, FX_Heating)
             break
-        elseif (abs(FX_Cooling) < p.solver_eft_tolerance) && (FX_Heating > 0.0)
+        elseif (abs(FX_Cooling) < p.solver_eft_tolerance) && (FX_Heating > 0.0) && (!SizeForHeating)
             r.FX_Now[size_iter] = FX_Cooling
             break
-        elseif (abs(FX_Heating) < p.solver_eft_tolerance) && (FX_Cooling > 0.0)
+        elseif (abs(FX_Heating) < p.solver_eft_tolerance) && (FX_Cooling > 0.0) && (!SizeForCooling)
             r.FX_Now[size_iter] = FX_Heating
             break
         end
@@ -314,6 +374,23 @@ function size_borefield(p)
             if (FX_Cooling > 0.0) && (FX_Heating > 0.0)
                 r.X_Now[size_iter+1] = r.X_Now[size_iter] / 2.0
                 r.FX_Now[size_iter] = max(FX_Cooling, FX_Heating)
+            # Hybrid
+            elseif SizeForHeating
+                if FX_Heating > 0.0
+                    r.X_Now[size_iter+1] = r.X_Now[size_iter] / 2.0
+                    r.FX_Now[size_iter] = FX_Heating
+                else
+                    r.X_Now[size_iter+1] = r.X_Now[size_iter] * 2.0
+                    r.FX_Now[size_iter] = FX_Heating
+                end
+            elseif SizeForCooling
+                if FX_Cooling > 0.0
+                    r.X_Now[size_iter+1] = r.X_Now[size_iter] / 2.0
+                    r.FX_Now[size_iter] = FX_Cooling
+                else
+                    r.X_Now[size_iter+1] = r.X_Now[size_iter] * 2.0
+                    r.FX_Now[size_iter] = FX_Cooling
+                end 
             elseif FX_Cooling > 0.0
                 r.X_Now[size_iter+1] = 2.0 * r.X_Now[size_iter]
                 r.FX_Now[size_iter] = FX_Heating
@@ -327,7 +404,12 @@ function size_borefield(p)
             size_iter += 1
             continue
         elseif size_iter > 1
-            if (FX_Cooling > p.solver_eft_tolerance) || (FX_Heating > p.solver_eft_tolerance)
+            # Hybrid
+            if SizeForHeating
+                r.FX_Now[size_iter] = FX_Heating
+            elseif SizeForCooling
+                r.FX_Now[size_iter] = FX_Cooling
+            elseif (FX_Cooling > p.solver_eft_tolerance) || (FX_Heating > p.solver_eft_tolerance)
                 if FX_Heating < p.solver_eft_tolerance
                     r.FX_Now[size_iter] = FX_Heating
                 elseif FX_Cooling < p.solver_eft_tolerance
@@ -351,9 +433,23 @@ function size_borefield(p)
             #!Check to see if the program is stuck in a tolerance situation hunting a solution between two adjacent # bore sizes 
             if abs(r.N_Bores[size_iter] - r.N_Bores[size_iter-1]) == 1
                 if (r.FX_Now[size_iter] < 0) && (r.FX_Now[size_iter-1] > 0)
-                    break    
+                    if !FinalSizingRun && f_HybridSize > 0 && f_HybridSize != 1
+                        FinalSizingRun = true
+                        SizeForCooling = true
+                        SizeForHeating = true
+                        r.X_Now[size_iter+1] = r.X_Now[size_iter+1] * f_HybridSize
+                    else
+                        break    
+                    end
                 elseif (r.FX_Now[size_iter] > 0) && (r.FX_Now[size_iter-1] < 0)
-                    break
+                    if !FinalSizingRun && f_HybridSize > 0 && f_HybridSize != 1
+                        FinalSizingRun = true
+                        SizeForCooling = true
+                        SizeForHeating = true
+                        r.X_Now[size_iter+1] = r.X_Now[size_iter+1] * f_HybridSize
+                    else
+                        break
+                    end
                 end
             end
             
