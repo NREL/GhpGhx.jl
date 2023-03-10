@@ -131,6 +131,13 @@ function get_results_for_reopt(r::ResultsStruct, p::InputsStruct)
     results_dict["annual_aux_heater_electric_consumption_kwh"] = round(sum(results_dict["yearly_aux_heater_electric_consumption_series_kw"]), digits=3) 
     results_dict["annual_aux_cooler_electric_consumption_kwh"] = round(sum(results_dict["yearly_aux_cooler_electric_consumption_series_kw"]), digits=3)
 
+    results_dict["aux_heat_exchange_unit_type"] = "None"
+    if results_dict["annual_aux_heater_electric_consumption_kwh"] > 0.1
+        results_dict["aux_heat_exchange_unit_type"] = "Heater"
+    elseif results_dict["annual_aux_cooler_electric_consumption_kwh"] > 0.1
+        results_dict["aux_heat_exchange_unit_type"] = "Cooler"
+    end
+
     results_dict["yearly_total_electric_consumption_series_kw"] = 
         results_dict["yearly_heating_heatpump_electric_consumption_series_kw"] + 
         results_dict["yearly_cooling_heatpump_electric_consumption_series_kw"] + 
