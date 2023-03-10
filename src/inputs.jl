@@ -62,6 +62,7 @@ Base.@kwdef mutable struct InputsStruct
     ghx_pump_power_exponent::Float64 = 2.2
     max_eft_allowable_f::Float64 = 104.0
     min_eft_allowable_f::Float64 = 23.0
+    is_hybrid_ghx::Bool = true
     hybrid_sizing_flag::Float64 = 1.0
     is_heating_electric::Bool = true
     aux_heater_thermal_efficiency::Float64 = 0.98
