@@ -94,8 +94,12 @@ function get_results_for_reopt(r::ResultsStruct, p::InputsStruct)
     results_dict["yearly_ghx_pump_electric_consumption_series_kw"] = zeros(8760)
     results_dict["yearly_heat_pump_eft_series_f"] = zeros(8760)
     # Hybrid
-    results_dict["yearly_auxiliary_boiler_consumption_series_mmbtu_per_hour"] = zeros(8760)
-    results_dict["yearly_auxiliary_cooling_tower_consumption_series_ton"] = zeros(8760)
+    results_dict["yearly_aux_heater_thermal_production_series_mmbtu_per_hour"] = zeros(8760)
+    yearly_aux_cooler_thermal_production_series_ton = zeros(8760)
+    yearly_aux_heater_thermal_production_series_kwt = zeros(8760)
+    results_dict["yearly_aux_cooler_thermal_production_series_kwt"] = zeros(8760)
+    results_dict["yearly_aux_heater_electric_consumption_series_kw"] = zeros(8760)
+    results_dict["yearly_aux_cooler_electric_consumption_series_kw"] = zeros(8760)
     results_dict["end_of_year_eft_f"] = zeros(0)
     
     # Get average electric consumption
@@ -104,35 +108,42 @@ function get_results_for_reopt(r::ResultsStruct, p::InputsStruct)
         results_dict["yearly_cooling_heatpump_electric_consumption_series_kw"] += round.(r.P_WSHPc_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
         results_dict["yearly_ghx_pump_electric_consumption_series_kw"] += round.(r.P_GHXPump_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
         results_dict["yearly_heat_pump_eft_series_f"] += round.((r.EWT[(yr-1)*8760+1:yr*8760] * 1.8 .+ 32.0) / p.simulation_years, digits=3)
+    end
+
+    # Hybrid - get average auxiliary heater/cooler production
+    for yr in 1:p.simulation_years
+        yearly_aux_heater_thermal_production_series_kwt += round.(r.QauxHt_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
+        results_dict["yearly_aux_cooler_thermal_production_series_kwt"] += round.(r.QauxCl_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
         append!(results_dict["end_of_year_eft_f"], round.((r.EWT[yr*8760] * 1.8 .+ 32.0), digits=3))
     end
 
-    # Hybrid - get average consumption
-    yearly_auxiliary_boiler_consumption_series_kwt = zeros(8760)
-    yearly_auxiliary_cooling_tower_consumption_series_kwt = zeros(8760)
-    for yr in 1:p.simulation_years
-        yearly_auxiliary_boiler_consumption_series_kwt += round.(r.QauxHt_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
-        yearly_auxiliary_cooling_tower_consumption_series_kwt += round.(r.QauxCl_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
-    end
+    results_dict["yearly_aux_heater_thermal_production_series_mmbtu_per_hour"] = yearly_aux_heater_thermal_production_series_kwt / p.MMBTU_TO_KWH
+    yearly_aux_cooler_thermal_production_series_ton = results_dict["yearly_aux_cooler_thermal_production_series_kwt"]  / p.TON_TO_KW
+    results_dict["peak_aux_heater_thermal_production_mmbtu_per_hour"] = round(maximum(results_dict["yearly_aux_heater_thermal_production_series_mmbtu_per_hour"]), digits=3)
+    results_dict["peak_aux_cooler_thermal_production_ton"] = round(maximum(yearly_aux_cooler_thermal_production_series_ton), digits=3)
 
-    results_dict["yearly_auxiliary_boiler_consumption_series_mmbtu_per_hour"] = yearly_auxiliary_boiler_consumption_series_kwt / p.MMBTU_TO_KWH
-    results_dict["yearly_auxiliary_cooling_tower_consumption_series_ton"] = yearly_auxiliary_cooling_tower_consumption_series_kwt / p.TON_TO_KW
-    results_dict["peak_auxiliary_boiler_mmbtu_per_hour"] = round(maximum(results_dict["yearly_auxiliary_boiler_consumption_series_mmbtu_per_hour"]), digits=3)
-    results_dict["peak_auxiliary_cooling_tower_ton"] = round(maximum(results_dict["yearly_auxiliary_cooling_tower_consumption_series_ton"]), digits=3)
-
-    # Elec consumption of cooling tower and/or auxiliary boiler
-    yearly_auxiliary_cooling_tower_consumption_series_kwe = yearly_auxiliary_cooling_tower_consumption_series_kwt * p.auxiliary_cooling_tower_efficiency_kwe_per_kwt
-    yearly_auxiliary_boiler_consumption_series_kwe = zeros(8760)
+    # Elec consumption of auxiliary cooler and/or heater
+    results_dict["yearly_aux_cooler_electric_consumption_series_kw"] = results_dict["yearly_aux_cooler_thermal_production_series_kwt"] * p.aux_cooler_energy_use_intensity_kwe_per_kwt
     if p.is_heating_electric
-        yearly_auxiliary_boiler_consumption_series_kwe = yearly_auxiliary_boiler_consumption_series_kwt / p.auxiliary_boiler_efficiency
+        results_dict["yearly_aux_heater_electric_consumption_series_kw"] = yearly_aux_heater_thermal_production_series_kwt / p.aux_heater_thermal_efficiency
     end
     
+    results_dict["annual_aux_heater_electric_consumption_kwh"] = round(sum(results_dict["yearly_aux_heater_electric_consumption_series_kw"]), digits=3) 
+    results_dict["annual_aux_cooler_electric_consumption_kwh"] = round(sum(results_dict["yearly_aux_cooler_electric_consumption_series_kw"]), digits=3)
+
+    results_dict["aux_heat_exchange_unit_type"] = "None"
+    if results_dict["annual_aux_heater_electric_consumption_kwh"] > 0.1
+        results_dict["aux_heat_exchange_unit_type"] = "Heater"
+    elseif results_dict["annual_aux_cooler_electric_consumption_kwh"] > 0.1
+        results_dict["aux_heat_exchange_unit_type"] = "Cooler"
+    end
+
     results_dict["yearly_total_electric_consumption_series_kw"] = 
         results_dict["yearly_heating_heatpump_electric_consumption_series_kw"] + 
         results_dict["yearly_cooling_heatpump_electric_consumption_series_kw"] + 
         results_dict["yearly_ghx_pump_electric_consumption_series_kw"] + 
-        yearly_auxiliary_cooling_tower_consumption_series_kwe + 
-        yearly_auxiliary_boiler_consumption_series_kwe
+        results_dict["yearly_aux_heater_electric_consumption_series_kw"] + 
+        results_dict["yearly_aux_cooler_electric_consumption_series_kw"]
     results_dict["yearly_total_electric_consumption_kwh"] = round(sum(results_dict["yearly_total_electric_consumption_series_kw"]), digits=1)
     results_dict["peak_heating_heatpump_thermal_ton"] = round(p.PeakTons_WSHP_H, digits=3)
     results_dict["peak_cooling_heatpump_thermal_ton"] = round(p.PeakTons_WSHP_C, digits=3)
