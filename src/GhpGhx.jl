@@ -87,6 +87,7 @@ function size_borefield(p)
     else
         SizeForHeating = false
         SizeForCooling = false
+        f_HybridSize = p.f_HybridSize
     end
     FinalSizingRun = false
 
@@ -300,8 +301,8 @@ function size_borefield(p)
                         r.Qf_GHX_Stored += OUT[12] * Delt
                     end
 
-                    # EWT is an AVERAGE temperature over the hour
-                    r.EWT[8760*(year-1)+hr] += OUT[1]*Delt
+                    # LWT is an AVERAGE temperature over the hour              
+                    r.LWT[8760*(year-1)+hr] += OUT[1]*Delt
 
                     r.P_GHXPump_Hourly[8760*(year-1)+hr] += P_GHXPump * Delt / 3600.0
                     r.P_WSHPc_Hourly[8760*(year-1)+hr] += P_WSHP_C * Delt / 3600.0
@@ -332,6 +333,16 @@ function size_borefield(p)
                     end 
                     INFO[13] = 0
                 end
+                # EWT is an AVERAGE temperature over the hour
+                if SizeForHeating
+                    r.EWT[8760*(year-1)+hr] = min(p.Tmax_Sizing, r.LWT[8760*(year-1)+hr]) 
+                end
+                if SizeForCooling
+                    r.EWT[8760*(year-1)+hr] = max(p.Tmin_Sizing, r.LWT[8760*(year-1)+hr])
+                end
+                if !SizeForHeating && !SizeForCooling
+                    r.EWT[8760*(year-1)+hr] = r.LWT[8760*(year-1)+hr]
+                end
             end
             println("EFT after year ", year ," = ", round(OUT[1] * 1.8 + 32.0, digits=1)," F")
         end
@@ -359,16 +370,49 @@ function size_borefield(p)
         # If tolerance is met for either heating or cooling, break the while loop and accept size solution
         if (abs(FX_Cooling) < p.solver_eft_tolerance) && (abs(FX_Heating) < p.solver_eft_tolerance)
             r.FX_Now[size_iter] = min(FX_Cooling, FX_Heating)
-            break
+            # break
+            if !FinalSizingRun && f_HybridSize > 0 && f_HybridSize != 1
+                FinalSizingRun = true
+                SizeForCooling = true
+                SizeForHeating = true
+                r.X_Now[size_iter+1] = r.X_Now[size_iter] * f_HybridSize
+                r.N_Bores[size_iter] = floor(r.X_Now[size_iter+1] / p.Depth_Bores) + 1
+                size_iter += 1
+                println("Starting final hybrid sizing run...")
+            else
+               break
+            end
         elseif (abs(FX_Cooling) < p.solver_eft_tolerance) && (FX_Heating > 0.0) && (!SizeForHeating)
             r.FX_Now[size_iter] = FX_Cooling
-            break
+            # break
+            if !FinalSizingRun && f_HybridSize > 0 && f_HybridSize != 1
+                FinalSizingRun = true
+                SizeForCooling = true
+                SizeForHeating = true
+                r.X_Now[size_iter+1] = r.X_Now[size_iter] * f_HybridSize
+                r.N_Bores[size_iter] = floor(r.X_Now[size_iter+1] / p.Depth_Bores) + 1
+                size_iter += 1
+                println("Starting final hybrid sizing run...")
+            else
+                break
+            end
         elseif (abs(FX_Heating) < p.solver_eft_tolerance) && (FX_Cooling > 0.0) && (!SizeForCooling)
             r.FX_Now[size_iter] = FX_Heating
-            break
+            # break
+            if !FinalSizingRun && f_HybridSize > 0 && f_HybridSize != 1
+                FinalSizingRun = true
+                SizeForCooling = true
+                SizeForHeating = true
+                r.X_Now[size_iter+1] = r.X_Now[size_iter] * f_HybridSize
+                r.N_Bores[size_iter] = floor(r.X_Now[size_iter+1] / p.Depth_Bores) + 1
+                size_iter += 1
+                println("Starting final hybrid sizing run...")
+            else
+                break
+            end
         end
         # Check the first iteration if it solved and if not, give it a next best guess
-        if size_iter == 1
+        if size_iter == 1 && !FinalSizingRun 
             # X_Now[size_iter=1] is already defined by X_init
             # FX_Now[size_iter=1] is NOT already defined (removed "X/FX_Previous" from TESS)
             if (FX_Cooling > 0.0) && (FX_Heating > 0.0)
@@ -403,7 +447,7 @@ function size_borefield(p)
             end
             size_iter += 1
             continue
-        elseif size_iter > 1
+        elseif size_iter > 1 && !FinalSizingRun 
             # Hybrid
             if SizeForHeating
                 r.FX_Now[size_iter] = FX_Heating
@@ -433,30 +477,39 @@ function size_borefield(p)
             #!Check to see if the program is stuck in a tolerance situation hunting a solution between two adjacent # bore sizes 
             if abs(r.N_Bores[size_iter] - r.N_Bores[size_iter-1]) == 1
                 if (r.FX_Now[size_iter] < 0) && (r.FX_Now[size_iter-1] > 0)
-                    if !FinalSizingRun && f_HybridSize > 0 && f_HybridSize != 1
-                        FinalSizingRun = true
-                        SizeForCooling = true
-                        SizeForHeating = true
-                        r.X_Now[size_iter+1] = r.X_Now[size_iter+1] * f_HybridSize
-                    else
-                        break    
-                    end
+                    break
+                    # if !FinalSizingRun && f_HybridSize > 0 && f_HybridSize != 1
+                    #     FinalSizingRun = true
+                    #     SizeForCooling = true
+                    #     SizeForHeating = true
+                    #     r.X_Now[size_iter+1] = r.X_Now[size_iter+1] * f_HybridSize
+                    #     r.N_Bores[size_iter] = floor(r.X_Now[size_iter+1] / p.Depth_Bores) + 1
+                    #     println("Starting final hybrid sizing run...")
+                    # else
+                    #     break    
+                    # end
                 elseif (r.FX_Now[size_iter] > 0) && (r.FX_Now[size_iter-1] < 0)
-                    if !FinalSizingRun && f_HybridSize > 0 && f_HybridSize != 1
-                        FinalSizingRun = true
-                        SizeForCooling = true
-                        SizeForHeating = true
-                        r.X_Now[size_iter+1] = r.X_Now[size_iter+1] * f_HybridSize
-                    else
-                        break
-                    end
+                    break
+                    # if !FinalSizingRun && f_HybridSize > 0 && f_HybridSize != 1
+                    #     FinalSizingRun = true
+                    #     SizeForCooling = true
+                    #     SizeForHeating = true
+                    #     r.X_Now[size_iter+1] = r.X_Now[size_iter+1] * f_HybridSize
+                    #     r.N_Bores[size_iter] = floor(r.X_Now[size_iter+1] / p.Depth_Bores) + 1
+                    #     println("Starting final hybrid sizing run...")
+                    # else
+                    #     break
+                    # end
                 end
             end
-            
+
             size_iter += 1
             continue
         end
     end
+
+    r.N_iterations = min(size_iter, p.max_sizing_iterations)
+
     # Record actual final EWT error; if the loop exits by hitting max_sizing_iterations, record previous error
     if r.FX_Now[size_iter] == 0
         r.FX_Final = r.FX_Now[size_iter-1]
