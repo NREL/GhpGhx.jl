@@ -68,7 +68,7 @@ Base.@kwdef mutable struct InputsStruct
     aux_heater_thermal_efficiency::Float64 = 0.98
     aux_cooler_energy_use_intensity_kwe_per_kwt::Float64 = 0.02
     hybrid_ghx_sizing_method::String = "None"
-    hybrid_ghx_fraction::Float64 = 0.6
+    hybrid_ghx_sizing_fraction::Float64 = 0.6
 
     # Array/Dict inputs
     heating_thermal_load_mmbtu_per_hr::Array{Float64,1} = Float64[]
