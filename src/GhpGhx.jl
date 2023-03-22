@@ -301,7 +301,7 @@ function size_borefield(p)
                         r.Qf_GHX_Stored += OUT[12] * Delt
                     end
 
-                    # LWT is an AVERAGE temperature over the hour              
+                    # LWT (from GHX) is an AVERAGE temperature over the hour              
                     r.LWT[8760*(year-1)+hr] += OUT[1]*Delt
 
                     r.P_GHXPump_Hourly[8760*(year-1)+hr] += P_GHXPump * Delt / 3600.0
