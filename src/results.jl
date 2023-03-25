@@ -55,6 +55,8 @@ Base.@kwdef mutable struct ResultsStruct
     QauxHt_Hourly::Array{Float64, 1} = zeros(total_hours)
     QauxCl_Hourly::Array{Float64, 1} = zeros(total_hours)
     EWT::Array{Float64, 1} = zeros(total_hours)
+    LWT::Array{Float64, 1} = zeros(total_hours)
+    N_iterations::Int64 = 0
 end
 
 """
@@ -100,7 +102,10 @@ function get_results_for_reopt(r::ResultsStruct, p::InputsStruct)
     results_dict["yearly_aux_cooler_thermal_production_series_kwt"] = zeros(8760)
     results_dict["yearly_aux_heater_electric_consumption_series_kw"] = zeros(8760)
     results_dict["yearly_aux_cooler_electric_consumption_series_kw"] = zeros(8760)
-    results_dict["end_of_year_eft_f"] = zeros(0)
+    results_dict["yearly_ghx_lft_series_f"] = zeros(8760)
+    results_dict["end_of_year_ghx_lft_f"] = zeros(0)
+    results_dict["max_yearly_ghx_lft_f"] = zeros(0)
+    results_dict["min_yearly_ghx_lft_f"] = zeros(0)
     
     # Get average electric consumption
     for yr in 1:p.simulation_years
@@ -112,9 +117,12 @@ function get_results_for_reopt(r::ResultsStruct, p::InputsStruct)
 
     # Hybrid - get average auxiliary heater/cooler production
     for yr in 1:p.simulation_years
+        results_dict["yearly_ghx_lft_series_f"] += round.((r.LWT[(yr-1)*8760+1:yr*8760] * 1.8 .+ 32.0) / p.simulation_years, digits=3)
         yearly_aux_heater_thermal_production_series_kwt += round.(r.QauxHt_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
         results_dict["yearly_aux_cooler_thermal_production_series_kwt"] += round.(r.QauxCl_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
-        append!(results_dict["end_of_year_eft_f"], round.((r.EWT[yr*8760] * 1.8 .+ 32.0), digits=3))
+        append!(results_dict["end_of_year_ghx_lft_f"], round.((r.LWT[yr*8760] * 1.8 .+ 32.0), digits=3))
+        append!(results_dict["max_yearly_ghx_lft_f"], round.(maximum(r.LWT[(yr-1)*8760+1:yr*8760]* 1.8 .+ 32.0), digits=3))
+        append!(results_dict["min_yearly_ghx_lft_f"], round.(minimum(r.LWT[(yr-1)*8760+1:yr*8760] * 1.8 .+ 32.0), digits=3))
     end
 
     results_dict["yearly_aux_heater_thermal_production_series_mmbtu_per_hour"] = yearly_aux_heater_thermal_production_series_kwt / p.MMBTU_TO_KWH
@@ -137,6 +145,8 @@ function get_results_for_reopt(r::ResultsStruct, p::InputsStruct)
     elseif results_dict["annual_aux_cooler_electric_consumption_kwh"] > 0.1
         results_dict["aux_heat_exchange_unit_type"] = "Cooler"
     end
+
+    results_dict["ghx_soln_number_of_iterations"] = r.N_iterations
 
     results_dict["yearly_total_electric_consumption_series_kw"] = 
         results_dict["yearly_heating_heatpump_electric_consumption_series_kw"] + 
