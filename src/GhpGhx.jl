@@ -488,7 +488,7 @@ function size_borefield(p)
     r.N_iterations = min(size_iter, p.max_sizing_iterations)
 
     # Record actual final EWT error; if the loop exits by hitting max_sizing_iterations, record previous error
-    if r.FX_Now[size_iter] == 0
+    if r.FX_Now[size_iter] == 0 && size_iter != 1
         r.FX_Final = r.FX_Now[size_iter-1]
     else
         r.FX_Final = r.FX_Now[size_iter]

@@ -83,7 +83,7 @@ Base.@kwdef mutable struct InputsStruct
     dst_ghx_timesteps_per_hour::Int64 = 12
     tess_ghx_minimum_timesteps_per_hour::Int64 = 1
     max_sizing_iterations::Int64 = 15
-    init_sizing_factor_ft_per_peak_ton::Float64 = 246.1
+    init_sizing_factor_ft_per_peak_ton::Float64 = 75 #246.1
     
     ##### These are the variable names used in the GhpGhx, kept from TESS ######
     # TODO eventually just use the API names above in GhpGhx to remove redundancy (BUT WOULD HAVE TO DEAL WITH UNITS CONVERSION STILL)  
