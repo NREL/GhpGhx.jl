@@ -39,6 +39,7 @@ This struct defines the inputs for the GhpGhx module
 Base.@kwdef mutable struct InputsStruct
     ##### These are the exact /GhpGhx POST names from the API #####
     # Parameters
+    heat_pump_configuration::String  = "WAHP"  # "WAHP" or "WWHP"
     borehole_depth_ft::Float64 = 400.0
     ghx_header_depth_ft::Float64 = 4.0
     borehole_spacing_ft::Float64 = 20.0
@@ -140,6 +141,26 @@ Base.@kwdef mutable struct InputsStruct
     Prated_GHXPump::Float64 = NaN
     LPS_GHXPump::Float64 = NaN
     Mdot_GHXPump::Float64 = NaN
+
+    # Centralized GHP - WWHP
+    GPMperTon_WWHP_H::Float64 = NaN  #!Nominal flow rate of the water-water heating heat pumps from the GHX (gpm/ton) 
+    GPMperTon_WWHP_C::Float64 = NaN  #!Nominal flow rate of the water-water cooling heat pumps from the GHX (gpm/ton)
+    WattPerGPM_HeatingPumps::Float64 = NaN #!Nominal pump power for delivery of hot water to the loads (WWHP systems) (Watt/gpm)
+    WattPerGPM_CoolingPumps::Float64 = NaN #!Nominal pump power for delivery of chilled water to the loads (WWHP systems) (Watt/gpm)
+    fmin_VSP_HeatingPumps::Float64 = NaN  #!Minimum heating loop pump speed for variable speed option (set to 1 if constant speed pumps)
+    fmin_VSP_CoolingPumps::Float64 = NaN  #!Minimum cooling pump speed for variable speed option (set to 1 if constant speed pumps)
+    Exponent_HeatingPumps::Float64 = NaN  #!Exponent for relationship between heating loop pump power and heating loop pump flow rate
+    Exponent_CoolingPumps::Float64 = NaN  #!Exponent for relationship between cooling loop pump power and cooling loop pump flow rate
+
+    PeakTons_WWHP_H::Float64 = NaN
+    PeakTons_WWHP_C::Float64 = NaN
+    PeakTons_WWHP_GHX::Float64 = NaN
+    fPeak_WWHP_H::Float64 = NaN
+
+    GPM_HeatingPumps::Float64 = NaN
+    GPM_CoolingPumps::Float64 = NaN
+    Prated_HeatingPumps::Float64 = NaN
+    Prated_CoolingPumps::Float64 = NaN
 end
 
 
@@ -177,6 +198,13 @@ function InputsProcess(d::Dict)
 
     # Hybrid Flag
     d.f_HybridSize = d.hybrid_sizing_flag
+
+    # Heat pump configuration
+    if d.heat_pump_configuration == "WAHP"
+        d.I_Configuration = 1
+    elseif d.heat_pump_configuration == "WWHP"
+        d.I_Configuration = 3
+    end
 
     # Convert API inputs to GhpGhx variable names, and units from English to SI
     d.Depth_Bores=  d.borehole_depth_ft/ d.METER_TO_FEET # [m]
@@ -224,7 +252,7 @@ function InputsProcess(d::Dict)
     end
     
     d.T_Ground= sum(d.AmbientTemperature) / (365 * 24)  # [C]
-    d.Tamp_Ground=  (maximum(avg_temp_month) - minimum(avg_temp_month)) / 2  # [C]
+    d.Tamp_Ground= (maximum(avg_temp_month) - minimum(avg_temp_month)) / 2  # [C]
     d.DayMin_Surface= convert(Int64, round(argmin(d.AmbientTemperature) / 24))  # day of year
 
     # Find peak heating, cooling, and combined for initial sizing guess
@@ -233,17 +261,44 @@ function InputsProcess(d::Dict)
     d.PeakTons_WSHP_GHX= maximum(d.HeatingThermalLoadKW+ d.CoolingThermalLoadKW) / d.TON_TO_KW
     d.X_init= d.init_sizing_factor_ft_per_peak_ton/ d.METER_TO_FEET* d.PeakTons_WSHP_GHX # [m]
     
+    # Centralized GHP - WWHP 
+    d.GPMperTon_WWHP_H = d.ghx_fluid_flow_rate_gpm_per_ton
+    d.GPMperTon_WWHP_C = d.ghx_fluid_flow_rate_gpm_per_ton
+    d.WattPerGPM_HeatingPumps = d.ghx_pump_power_watt_per_gpm
+    d.WattPerGPM_CoolingPumps = d.ghx_pump_power_watt_per_gpm
+    d.fmin_VSP_HeatingPumps = d.ghx_pump_min_speed_fraction
+    d.fmin_VSP_CoolingPumps = d.ghx_pump_min_speed_fraction
+    d.Exponent_HeatingPumps = d.ghx_pump_power_exponent
+    d.Exponent_CoolingPumps = d.ghx_pump_power_exponent
+
+    d.PeakTons_WWHP_H = maximum(d.HeatingThermalLoadKW) / d.TON_TO_KW
+    d.PeakTons_WWHP_C = maximum(d.cooling_thermal_load_ton)
+    d.PeakTons_WWHP_GHX = maximum(d.HeatingThermalLoadKW + d.CoolingThermalLoadKW) / d.TON_TO_KW
+    idx = findmax(d.HeatingThermalLoadKW + d.CoolingThermalLoadKW)[2]
+    d.fPeak_WWHP_H = (d.HeatingThermalLoadKW / d.TON_TO_KW)[idx] / (max(0.0001, (d.HeatingThermalLoadKW / d.TON_TO_KW)[idx] + d.cooling_thermal_load_ton[idx]))
+    
     # Set some intermediate conditions
     d.N_Series= 1
     d.N_Radial= d.N_Series
     d.N_Vertical= 50
     d.RhoCp_Soil= d.Rho_Soil* d.Cp_Soil
     d.DayMin_DST= 270.0 - d.DayMin_Surface
-    d.GPM_GHXPump= d.GPMperTon_WSHP* d.PeakTons_WSHP_GHX
+
+    if d.I_Configuration == 1
+        d.GPM_GHXPump = d.GPMperTon_WSHP* d.PeakTons_WSHP_GHX
+    elseif d.I_Configuration == 3
+        d.GPM_GHXPump = d.GPMperTon_WWHP_H * d.PeakTons_WWHP_GHX * d.fPeak_WWHP_H + d.GPMperTon_WWHP_C * d.PeakTons_WWHP_GHX * (1 - d.fPeak_WWHP_H)
+
+        d.GPM_HeatingPumps = d.GPMperTon_WWHP_H * d.PeakTons_WWHP_H 
+        d.GPM_CoolingPumps = d.GPMperTon_WWHP_C * d.PeakTons_WWHP_C 
+        d.Prated_HeatingPumps = d.WattPerGPM_HeatingPumps * 3.6 * d.GPM_HeatingPumps
+        d.Prated_CoolingPumps = d.WattPerGPM_CoolingPumps * 3.6 * d.GPM_CoolingPumps
+    end
+
     d.Prated_GHXPump= d.WattPerGPM_GHXPump* 3.6 * d.GPM_GHXPump
     d.LPS_GHXPump= d.GPM_GHXPump/ 60 / 264.172 * 1000.0
     d.Mdot_GHXPump= d.GPM_GHXPump* 60 / 264.172 * d.Rho_GHXFluid
-    
+
     # Return processed (modified) InputsStruct d
     return d 
 end

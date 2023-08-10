@@ -120,7 +120,11 @@ function size_borefield(p)
                 # Find time step per hour based on flow rate
                 Tons_HeatPump_H = Q_Heat / 1.055 / 12000.0
                 Tons_HeatPump_C = Q_Cool / 1.055 / 12000.0
-                GPM_GHX = max(p.fMin_VSP_GHXPump * p.GPM_GHXPump, (Tons_HeatPump_H + Tons_HeatPump_C) * p.GPMperTon_WSHP)
+                if p.I_Configuration == 1
+                    GPM_GHX = max(p.fMin_VSP_GHXPump * p.GPM_GHXPump, (Tons_HeatPump_H + Tons_HeatPump_C) * p.GPMperTon_WSHP)
+                elseif p.I_Configuration ==3 
+                    GPM_GHX = max(p.fMin_VSP_GHXPump * p.GPM_GHXPump, (Tons_HeatPump_H * p.GPMperTon_WWHP_H + Tons_HeatPump_C * p.GPMperTon_WWHP_C))
+                end
                 Mdot_GHX = GPM_GHX * 60.0 / 264.172 * p.Rho_GHXFluid
                 Mdot_Circuit = max(Mdot_GHX / r.N_Bores[size_iter] * p.N_Series, 0.001)
                 Circuit_Time = max(r.Mass_Circuit / Mdot_Circuit, 0.001)
@@ -200,10 +204,48 @@ function size_borefield(p)
                     Tons_HeatPump_C = Q_Cool / 1.055 / 12000.0
                     
                     if (Tons_HeatPump_H + Tons_HeatPump_C) > 0.0
-                        GPM_GHX = max(p.fMin_VSP_GHXPump * p.GPM_GHXPump, 
-                                        (Tons_HeatPump_H + Tons_HeatPump_C) * p.GPMperTon_WSHP)
+                        if p.I_Configuration == 1
+                            GPM_GHX = max(p.fMin_VSP_GHXPump * p.GPM_GHXPump, 
+                                            (Tons_HeatPump_H + Tons_HeatPump_C) * p.GPMperTon_WSHP)
+                        elseif p.I_Configuration == 3
+                            GPM_GHX = max(p.fMin_VSP_GHXPump * p.GPM_GHXPump,
+                                            (Tons_HeatPump_H * p.GPMperTon_WWHP_H + Tons_HeatPump_C * p.GPMperTon_WWHP_C))
+                        end
                     else
                         GPM_GHX = 0.0
+                    end
+
+                    if p.I_Configuration == 1
+                        P_HeatingPumps = 0
+                        P_CoolingPumps = 0
+                        Qf_HeatingPumps = 0
+                        Qf_CoolingPumps = 0
+                    elseif p.I_Configuration == 3
+                        # Account for the heating pumps
+                        if (Tons_HeatPump_H) > 0.0
+                            GPM_Heating = max(p.fmin_VSP_HeatingPumps * p.GPM_HeatingPumps, Tons_HeatPump_H * p.GPMperTon_WWHP_H)
+                            f_HeatingPumps = GPM_Heating / p.GPM_HeatingPumps
+                            P_HeatingPumps = p.Prated_HeatingPumps * (f_HeatingPumps ^ p.Exponent_HeatingPumps)
+                            Qf_HeatingPumps = P_HeatingPumps * 0.3
+                        else
+                            GPM_Heating = 0
+                            f_HeatingPumps = 0
+                            P_HeatingPumps = 0
+                            Qf_HeatingPumps = 0
+                        end
+                        
+                        # Account for the cooling pumps
+                        if (Tons_HeatPump_C) > 0.0
+                            GPM_Cooling = max(p.fmin_VSP_CoolingPumps * p.GPM_CoolingPumps, Tons_HeatPump_C * p.GPMperTon_WWHP_C)
+                            f_CoolingPumps = GPM_Cooling / p.GPM_CoolingPumps
+                            P_CoolingPumps = p.Prated_CoolingPumps * (f_CoolingPumps ^ p.Exponent_CoolingPumps)
+                            Qf_CoolingPumps = P_CoolingPumps * 0.3
+                        else
+                            GPM_Cooling = 0
+                            f_CoolingPumps = 0
+                            P_CoolingPumps = 0
+                            Qf_CoolingPumps = 0
+                        end
                     end
 
                     # Try to re-capture some of the imbalance from the GHX model and the heat pump model
@@ -282,6 +324,12 @@ function size_borefield(p)
                     r.Q_Absorbed_Total += Q_Absorbed * Delt
                     r.Q_GHX_Net += (Q_Rejected - Q_Absorbed) * Delt
                     
+                    # Centralized GHP
+                    r.Power_HeatingPumps += P_HeatingPumps * Delt
+                    r.Qfluid_HeatingPumps += Qf_HeatingPumps * Delt
+                    r.Power_CoolingPumps += P_CoolingPumps * Delt
+                    r.Qfluid_CoolingPumps += Qf_CoolingPumps * Delt
+
                     # Hybrid
                     r.Q_AuxCool_Total += Q_AuxiliaryCool * Delt
                     r.Q_AuxHeat_Total += Q_AuxiliaryHeat * Delt
@@ -310,9 +358,13 @@ function size_borefield(p)
                     r.Qc_Hourly[8760*(year-1)+hr] += Q_Cool * Delt / 3600.0
                     r.Qh_Hourly[8760*(year-1)+hr] += Q_Heat * Delt / 3600.0
 
+                    # Centralized GHP
+                    r.P_HeatingPumps_Hourly[8760*(year-1)+hr] += P_HeatingPumps * Delt / 3600.0
+                    r.P_CoolingPumps_Hourly[8760*(year-1)+hr] += P_CoolingPumps * Delt / 3600.0
+
                     # Hybrid
-                    r.QauxHt_Hourly[8760*(year-1)+hr] += Q_AuxiliaryHeat * Delt / 3600. #kWt
-                    r.QauxCl_Hourly[8760*(year-1)+hr] += Q_AuxiliaryCool * Delt / 3600. #kWt
+                    r.QauxHt_Hourly[8760*(year-1)+hr] += Q_AuxiliaryHeat * Delt / 3600.0 #kWt
+                    r.QauxCl_Hourly[8760*(year-1)+hr] += Q_AuxiliaryCool * Delt / 3600.0 #kWt
 
                     # Call the ground heat exchanger model to clean up as the timestep is complete (assign Ti=Tf)
                     INFO[13] = 1

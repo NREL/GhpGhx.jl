@@ -44,10 +44,18 @@ Base.@kwdef mutable struct ResultsStruct
     Qnet_GHX::Float64 = 0.0
     Qnet_HeatPumps::Float64 = 0.0
     Qnet_RunningTotal::Float64 = 0.0
-
+    
+    # Centralized GHP
+    Power_HeatingPumps::Float64 = 0.0
+    Qfluid_HeatingPumps::Float64 = 0.0
+    Power_CoolingPumps::Float64 = 0.0
+    Qfluid_CoolingPumps::Float64 = 0.0
+    
     # Array results
     total_hours::Int64  # Required argument to be passed by InputsStruct
     P_GHXPump_Hourly::Array{Float64, 1} = zeros(total_hours)
+    P_HeatingPumps_Hourly::Array{Float64, 1} = zeros(total_hours)
+    P_CoolingPumps_Hourly::Array{Float64, 1} = zeros(total_hours)
     P_WSHPh_Hourly::Array{Float64, 1} = zeros(total_hours)
     P_WSHPc_Hourly::Array{Float64, 1} = zeros(total_hours)
     Qh_Hourly::Array{Float64, 1} = zeros(total_hours)
