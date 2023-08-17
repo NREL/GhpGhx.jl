@@ -122,7 +122,7 @@ function size_borefield(p)
                 Tons_HeatPump_C = Q_Cool / 1.055 / 12000.0
                 if p.I_Configuration == 1
                     GPM_GHX = max(p.fMin_VSP_GHXPump * p.GPM_GHXPump, (Tons_HeatPump_H + Tons_HeatPump_C) * p.GPMperTon_WSHP)
-                elseif p.I_Configuration ==3 
+                elseif p.I_Configuration == 3 
                     GPM_GHX = max(p.fMin_VSP_GHXPump * p.GPM_GHXPump, (Tons_HeatPump_H * p.GPMperTon_WWHP_H + Tons_HeatPump_C * p.GPMperTon_WWHP_C))
                 end
                 Mdot_GHX = GPM_GHX * 60.0 / 264.172 * p.Rho_GHXFluid
@@ -165,26 +165,60 @@ function size_borefield(p)
 
                     EWT_F = Tout_Auxiliary * 1.8 + 32.0  # [F] 
 
-                    # Find COP_Heat (Col 2) and COP_Cool (Col 3) based on temperature (Col 1) map; use interpolation between data points
-                    if EWT_F <= p.HeatPumpCOPMap[1, 1]
-                        COP_Heat = p.HeatPumpCOPMap[1, 2]
-                        COP_Cool = p.HeatPumpCOPMap[1, 3]
-                    elseif EWT_F > p.HeatPumpCOPMap[end, 1]
-                        COP_Heat = p.HeatPumpCOPMap[end, 2]
-                        COP_Cool = p.HeatPumpCOPMap[end, 3]            
-                    else
-                        # Loop over all temperature points in p.HeatPumpCOPMap, but break out of loop if it is found
-                        for (index, tmp) in enumerate(p.HeatPumpCOPMap[2:end, 1])  # Omit first and last temp checks, done above
-                            if EWT_F > p.HeatPumpCOPMap[index, 1] && EWT_F <= tmp  # "index" starts at 1, not 2, which is i-1 of tmp index in HeatPumpCOPMap
-                                slope_heat = (p.HeatPumpCOPMap[index+1, 2] - p.HeatPumpCOPMap[index, 2]) / (tmp - p.HeatPumpCOPMap[index, 1])
-                                COP_Heat = p.HeatPumpCOPMap[index, 2] + (tmp - EWT_F) * slope_heat
-                                slope_cool = (p.HeatPumpCOPMap[index+1, 3] - p.HeatPumpCOPMap[index, 3]) / (tmp - p.HeatPumpCOPMap[index, 1])
-                                COP_Cool = p.HeatPumpCOPMap[index, 3] + (tmp - EWT_F) * slope_cool
-                                break
+                    if p.I_Configuration == 1
+                        # Find COP_Heat (Col 2) and COP_Cool (Col 3) based on temperature (Col 1) map; use interpolation between data points
+                        if EWT_F <= p.HeatPumpCOPMap[1, 1]
+                            COP_Heat = p.HeatPumpCOPMap[1, 2]
+                            COP_Cool = p.HeatPumpCOPMap[1, 3]
+                        elseif EWT_F > p.HeatPumpCOPMap[end, 1]
+                            COP_Heat = p.HeatPumpCOPMap[end, 2]
+                            COP_Cool = p.HeatPumpCOPMap[end, 3]            
+                        else
+                            # Loop over all temperature points in p.HeatPumpCOPMap, but break out of loop if it is found
+                            for (index, tmp) in enumerate(p.HeatPumpCOPMap[2:end, 1])  # Omit first and last temp checks, done above
+                                if EWT_F > p.HeatPumpCOPMap[index, 1] && EWT_F <= tmp  # "index" starts at 1, not 2, which is i-1 of tmp index in HeatPumpCOPMap
+                                    slope_heat = (p.HeatPumpCOPMap[index+1, 2] - p.HeatPumpCOPMap[index, 2]) / (tmp - p.HeatPumpCOPMap[index, 1])
+                                    COP_Heat = p.HeatPumpCOPMap[index, 2] + (tmp - EWT_F) * slope_heat
+                                    slope_cool = (p.HeatPumpCOPMap[index+1, 3] - p.HeatPumpCOPMap[index, 3]) / (tmp - p.HeatPumpCOPMap[index, 1])
+                                    COP_Cool = p.HeatPumpCOPMap[index, 3] + (tmp - EWT_F) * slope_cool
+                                    break
+                                end
+                            end
+                        end
+
+                    elseif p.I_Configuration == 3
+                        # Find COP_Heat based on temperature (Col 1) map; use interpolation between data points
+                        if EWT_F <= p.HeatingHeatPumpCOPMap[1, 1]
+                            COP_Heat = p.HeatingHeatPumpCOPMap[1, 2]
+                        elseif EWT_F > p.HeatingHeatPumpCOPMap[end, 1]
+                            COP_Heat = p.HeatingHeatPumpCOPMap[end, 2]         
+                        else
+                            # Loop over all temperature points in p.HeatPumpCOPMap, but break out of loop if it is found
+                            for (index, tmp) in enumerate(p.HeatingHeatPumpCOPMap[2:end, 1])  # Omit first and last temp checks, done above
+                                if EWT_F > p.HeatingHeatPumpCOPMap[index, 1] && EWT_F <= tmp  # "index" starts at 1, not 2, which is i-1 of tmp index in HeatingHeatPumpCOPMap
+                                    slope = (p.HeatingHeatPumpCOPMap[index+1, 2] - p.HeatingHeatPumpCOPMap[index, 2]) / (tmp - p.HeatingHeatPumpCOPMap[index, 1])
+                                    COP_Heat = p.HeatingHeatPumpCOPMap[index, 2] + (tmp - EWT_F) * slope
+                                    break
+                                end
+                            end
+                        end
+                        # Find COP_Cool based on temperature (Col 1) map; use interpolation between data points
+                        if EWT_F <= p.CoolingHeatPumpCOPMap[1, 1]
+                            COP_Cool = p.CoolingHeatPumpCOPMap[1, 2]
+                        elseif EWT_F > p.CoolingHeatPumpCOPMap[end, 1]
+                            COP_Cool = p.CoolingHeatPumpCOPMap[end, 2]         
+                        else
+                            # Loop over all temperature points in p.HeatPumpCOPMap, but break out of loop if it is found
+                            for (index, tmp) in enumerate(p.CoolingHeatPumpCOPMap[2:end, 1])  # Omit first and last temp checks, done above
+                                if EWT_F > p.CoolingHeatPumpCOPMap[index, 1] && EWT_F <= tmp  # "index" starts at 1, not 2, which is i-1 of tmp index in CoolingHeatPumpCOPMap
+                                    slope = (p.CoolingHeatPumpCOPMap[index+1, 2] - p.CoolingHeatPumpCOPMap[index, 2]) / (tmp - p.CoolingHeatPumpCOPMap[index, 1])
+                                    COP_Cool = p.CoolingHeatPumpCOPMap[index, 2] + (tmp - EWT_F) * slope
+                                    break
+                                end
                             end
                         end
                     end
-                    
+
                     # Override COP_Heat/COP_Cool calculation if Q_Heat/Q_Cool is negative
                     if Q_Heat <= 0.0
                         COP_Heat = 3.0
@@ -193,13 +227,26 @@ function size_borefield(p)
                         COP_Cool = 3.0
                     end
 
-                    # Calculate the heat pump outputs
-                    P_WSHP_H = Q_Heat / COP_Heat
-                    P_WSHP_C = Q_Cool / COP_Cool
+                    if p.I_Configuration == 1
+                        # Calculate the heat pump outputs
+                        P_WSHP_H = Q_Heat / COP_Heat
+                        P_WSHP_C = Q_Cool / COP_Cool
+                        P_WWHP_H = 0
+                        P_WWHP_C = 0
 
-                    Q_Absorbed = Q_Heat - P_WSHP_H
-                    Q_Rejected = Q_Cool + P_WSHP_C
-                    
+                        Q_Absorbed = Q_Heat - P_WSHP_H
+                        Q_Rejected = Q_Cool + P_WSHP_C
+
+                    elseif p.I_Configuration == 3 
+                        P_WWHP_H = Q_Heat / COP_Heat
+                        P_WWHP_C = Q_Cool / COP_Cool
+                        P_WSHP_H = 0
+                        P_WSHP_C = 0
+
+                        Q_Absorbed = Q_Heat - P_WWHP_H
+                        Q_Rejected = Q_Cool + P_WWHP_C
+                    end
+
                     Tons_HeatPump_H = Q_Heat / 1.055 / 12000.0
                     Tons_HeatPump_C = Q_Cool / 1.055 / 12000.0
                     
@@ -318,8 +365,22 @@ function size_borefield(p)
                     r.Qfluid_GHXPump += r.Qf_GHXPump * Delt
                     r.Power_WSHP_C += P_WSHP_C * Delt
                     r.Power_WSHP_H += P_WSHP_H * Delt
-                    r.LoadMet_WSHP_C += Q_Cool * Delt
-                    r.LoadMet_WSHP_H += Q_Heat * Delt
+                    r.Power_WWHP_C += P_WWHP_C * Delt
+                    r.Power_WWHP_H += P_WWHP_H * Delt
+
+                    if p.I_Configuration == 1
+                        r.LoadMet_WSHP_C += Q_Cool * Delt
+                        r.LoadMet_WSHP_H += Q_Heat * Delt
+
+                        r.LoadMet_WWHP_C += 0
+                        r.LoadMet_WWHP_H += 0
+                    elseif p.I_Configuration == 3
+                        r.LoadMet_WSHP_C += 0
+                        r.LoadMet_WSHP_H += 0
+
+                        r.LoadMet_WWHP_C += Q_Cool * Delt
+                        r.LoadMet_WWHP_H += Q_Heat * Delt
+                    end
                     r.Q_Rejected_Total += Q_Rejected * Delt
                     r.Q_Absorbed_Total += Q_Absorbed * Delt
                     r.Q_GHX_Net += (Q_Rejected - Q_Absorbed) * Delt
@@ -355,6 +416,8 @@ function size_borefield(p)
                     r.P_GHXPump_Hourly[8760*(year-1)+hr] += P_GHXPump * Delt / 3600.0
                     r.P_WSHPc_Hourly[8760*(year-1)+hr] += P_WSHP_C * Delt / 3600.0
                     r.P_WSHPh_Hourly[8760*(year-1)+hr] += P_WSHP_H * Delt / 3600.0
+                    r.P_WWHPc_Hourly[8760*(year-1)+hr] += P_WWHP_C * Delt / 3600.0
+                    r.P_WWHPh_Hourly[8760*(year-1)+hr] += P_WWHP_H * Delt / 3600.0
                     r.Qc_Hourly[8760*(year-1)+hr] += Q_Cool * Delt / 3600.0
                     r.Qh_Hourly[8760*(year-1)+hr] += Q_Heat * Delt / 3600.0
 
