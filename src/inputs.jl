@@ -254,9 +254,13 @@ function InputsProcess(d::Dict)
         
         if isempty(d.wwhp_cop_map_eft_heating)
             heating_cop_map_list = deepcopy(default_wwhp_heating_cop_map_list)
+        else
+            heating_cop_map_list = d.wwhp_cop_map_eft_heating
         end
         if isempty(d.wwhp_cop_map_eft_cooling)
             cooling_cop_map_list = deepcopy(default_wwhp_cooling_cop_map_list)
+        else
+            cooling_cop_map_list = d.wwhp_cop_map_eft_cooling
         end
 
         heating_COPs, heating_EFTs = get_wwhp_cop_matrix(heating_cop_map_list, d.wwhp_heating_setpoint_f)
