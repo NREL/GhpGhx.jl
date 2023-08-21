@@ -216,41 +216,39 @@ Performs unit conversions, name conversions, and additional processing of inputs
 function InputsProcess(d::Dict)   
     # Convert all Dict key strings to symbols which is required for kwargs inputs of InputsStruct
     d = dictkeys_tosymbols(d)
-    
-    # Heat pump configuration
-    if d[:heat_pump_configuration] == "WSHP"
-        d[:I_Configuration] = 1
-    elseif d[:heat_pump_configuration] == "WWHP"
-        d[:I_Configuration] = 3
-    else
-        print("Unknown heat pump configuration entered.")
-    end
-    
-    if d[:I_Configuration] == 1
-        # Load in default COP map, if not input, which is a NON-keyword argument, so required for InputsStruct instantiation
-        if !haskey(d, :cop_map_eft_heating_cooling) || isempty(d[:cop_map_eft_heating_cooling])
-            cop_map_list = deepcopy(default_cop_map_list)
-        else
-            cop_map_list = d[:cop_map_eft_heating_cooling]
-        end
-        # Convert COP map list_of_dict to Matrix{Float64} (alias for Array{Float64, 2})
-        d[:HeatPumpCOPMap] = zeros(Float64, length(cop_map_list), 3)
-        for i in eachindex(cop_map_list)
-            d[:HeatPumpCOPMap][i,1] = cop_map_list[i]["eft"]
-            d[:HeatPumpCOPMap][i,2] = cop_map_list[i]["heat_cop"]
-            d[:HeatPumpCOPMap][i,3] = cop_map_list[i]["cool_cop"]
-        end  
-    elseif d[:I_Configuration] == 3
-        d[:HeatPumpCOPMap] = zeros(Float64, 1, 1)
-    end
 
+    d[:HeatPumpCOPMap] = zeros(Float64, 1, 1)
     d[:HeatingHeatPumpCOPMap] = zeros(Float64, 1, 1)
     d[:CoolingHeatPumpCOPMap] = zeros(Float64, 1, 1)
 
     # Instantiate the mutable struct for assigning default values from Base.@kwdef and allows processing/modifying
     d = InputsStruct(; d...)
 
-    if d.I_Configuration == 3
+    # Heat pump configuration
+    if d.heat_pump_configuration == "WSHP"
+        d.I_Configuration = 1
+    elseif d.heat_pump_configuration == "WWHP"
+        d.I_Configuration = 3
+    else
+        print("Unknown heat pump configuration entered.")
+    end
+    
+    if d.I_Configuration == 1
+        # Load in default COP map, if not input, which is a NON-keyword argument, so required for InputsStruct instantiation
+        if isempty(d.cop_map_eft_heating_cooling)
+            cop_map_list = deepcopy(default_cop_map_list)
+        else
+            cop_map_list = d.cop_map_eft_heating_cooling
+        end
+        # Convert COP map list_of_dict to Matrix{Float64} (alias for Array{Float64, 2})
+        d.HeatPumpCOPMap = zeros(Float64, length(cop_map_list), 3)
+        for i in eachindex(cop_map_list)
+            d.HeatPumpCOPMap[i,1] = cop_map_list[i]["eft"]
+            d.HeatPumpCOPMap[i,2] = cop_map_list[i]["heat_cop"]
+            d.HeatPumpCOPMap[i,3] = cop_map_list[i]["cool_cop"]
+        end  
+
+    elseif d.I_Configuration == 3
         
         if isempty(d.wwhp_cop_map_eft_heating)
             heating_cop_map_list = deepcopy(default_wwhp_heating_cop_map_list)
