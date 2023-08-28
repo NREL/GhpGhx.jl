@@ -263,10 +263,10 @@ function size_borefield(p)
                     end
 
                     if p.I_Configuration == 1
-                        P_HeatingPumps = 0
-                        P_CoolingPumps = 0
-                        Qf_HeatingPumps = 0
-                        Qf_CoolingPumps = 0
+                        P_HeatingPumps = 0  # Power of the recirculating fluid pump in the building's heating loop
+                        P_CoolingPumps = 0  # Power of the recirculating fluid pump in the building's cooling loop
+                        Qf_HeatingPumps = 0 # Thermal energy of the recirculating fluid pump in the building's heating loop
+                        Qf_CoolingPumps = 0 # Thermal energy of the recirculating fluid pump in the building's cooling loop
                     elseif p.I_Configuration == 3
                         # Account for the heating pumps
                         if (Tons_HeatPump_H) > 0.0

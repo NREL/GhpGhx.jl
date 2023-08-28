@@ -183,6 +183,9 @@ function get_results_for_reopt(r::ResultsStruct, p::InputsStruct)
         results_dict["peak_cooling_heatpump_thermal_ton"] = round(p.PeakTons_WWHP_C, digits=3)
         results_dict["peak_combined_heatpump_thermal_ton"] = round(p.PeakTons_WWHP_GHX, digits=3)
     end
+    
+    results_dict["heat_pump_configuration"] = p.heat_pump_configuration
+
     results_dict["max_eft_f"] = round(maximum(r.EWT) * 1.8 + 32.0)
     results_dict["min_eft_f"] = round(minimum(r.EWT) * 1.8 + 32.0)
     # Calculate average COP for heating and cooling; estimate allocation of pump power to heating and cooling by thermal energy served
