@@ -101,8 +101,8 @@ Base.@kwdef mutable struct InputsStruct
     wwhp_heating_setpoint_f::Float64 = 110.0
 
     # Centralized GHP
-    wwhp_heating_pump_fluid_flow_rate_gpm_per_ton::Float64 = 2.5
-    wwhp_cooling_pump_fluid_flow_rate_gpm_per_ton::Float64 = 2.5
+    wwhp_heating_pump_fluid_flow_rate_gpm_per_ton::Float64 = 3.0
+    wwhp_cooling_pump_fluid_flow_rate_gpm_per_ton::Float64 = 3.0
     wwhp_heating_pump_power_watt_per_gpm::Float64 = 15.0
     wwhp_cooling_pump_power_watt_per_gpm::Float64 = 15.0
     wwhp_heating_pump_min_speed_fraction::Float64 = 0.1
