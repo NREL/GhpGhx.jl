@@ -103,7 +103,7 @@ function size_borefield(p)
 
     ###   LOOP THROUGH FOR EACH SIZING ITERATION UNTIL "break" or reaching max iterations   ###
     while size_iter <= p.max_sizing_iterations
-        println("size_iter = ", size_iter)
+        # println("size_iter = ", size_iter)
         # Initialize/reset and update variables (already done for first iteration above)
         if size_iter > 1
             r = ResultsStruct(X_Now = r.X_Now, FX_Now = r.FX_Now, N_Bores = r.N_Bores, 
@@ -112,7 +112,7 @@ function size_borefield(p)
             assign_PAR!(p, r, PAR, size_iter)
             init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
         end
-        println("N_bores = ", r.N_Bores[size_iter])
+        # println("N_bores = ", r.N_Bores[size_iter])
         for year in 1:p.simulation_years
             for hr in 1:8760  # TESS model has hourly-based timesteps per hour
                 Q_Heat = p.HeatingThermalLoadKW[hr] * 3600.0  # Convert kW to kJ/hr
@@ -459,7 +459,7 @@ function size_borefield(p)
                     r.EWT[8760*(year-1)+hr] = r.LWT[8760*(year-1)+hr]
                 end
             end
-            println("EFT after year ", year ," = ", round(OUT[1] * 1.8 + 32.0, digits=1)," F")
+            # println("EFT after year ", year ," = ", round(OUT[1] * 1.8 + 32.0, digits=1)," F")
         end
         # Use a Newton's method to calculate the bore size to meet the design goals
         # FX => error of temperature limits
@@ -492,7 +492,7 @@ function size_borefield(p)
                 r.X_Now[size_iter+1] = r.X_Now[size_iter] * f_HybridSize
                 r.N_Bores[size_iter] = floor(r.X_Now[size_iter+1] / p.Depth_Bores) + 1
                 size_iter += 1
-                println("Starting final hybrid sizing run...")
+                # println("Starting final hybrid sizing run...")
             else
                break
             end
@@ -505,7 +505,7 @@ function size_borefield(p)
                 r.X_Now[size_iter+1] = r.X_Now[size_iter] * f_HybridSize
                 r.N_Bores[size_iter] = floor(r.X_Now[size_iter+1] / p.Depth_Bores) + 1
                 size_iter += 1
-                println("Starting final hybrid sizing run...")
+                # println("Starting final hybrid sizing run...")
             else
                 break
             end
@@ -518,7 +518,7 @@ function size_borefield(p)
                 r.X_Now[size_iter+1] = r.X_Now[size_iter] * f_HybridSize
                 r.N_Bores[size_iter] = floor(r.X_Now[size_iter+1] / p.Depth_Bores) + 1
                 size_iter += 1
-                println("Starting final hybrid sizing run...")
+                # println("Starting final hybrid sizing run...")
             else
                 break
             end
