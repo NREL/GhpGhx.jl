@@ -31,6 +31,34 @@ const default_cop_map_list = [
     Dict{String, Real}("eft" => 120, "cool_cop" => 2.707, "heat_cop" => 6.341)
 ]
 
+const default_wwhp_cooling_cop_map_list = [
+    Dict{String, Real}("eft" => 20, "40" => 11.023, "50" => 11.023, "60" => 11.023)
+    Dict{String, Real}("eft" => 30, "40" => 11.023, "50" => 11.023, "60" => 11.023)
+    Dict{String, Real}("eft" => 40, "40" => 11.023, "50" => 11.023, "60" => 11.023)
+    Dict{String, Real}("eft" => 50, "40" => 10.481, "50" => 10.481, "60" => 10.481)
+    Dict{String, Real}("eft" => 60, "40" => 9.168, "50" => 9.168, "60" => 9.1683) 
+    Dict{String, Real}("eft" => 70, "40" => 7.263, "50" => 7.263, "60" => 7.263) 
+    Dict{String, Real}("eft" => 80, "40" => 5.826, "50" => 5.826, "60" => 5.8263) 
+    Dict{String, Real}("eft" => 90, "40" => 4.803, "50" => 4.803, "60" => 4.803) 
+    Dict{String, Real}("eft" => 100, "40" => 3.9, "50" => 3.9, "60" => 3.9)  
+    Dict{String, Real}("eft" => 110, "40" => 3.279, "50" => 3.279, "60" => 3.279)
+    Dict{String, Real}("eft" => 120, "40" => 2.707, "50" => 2.707, "60" => 2.707)
+]
+
+const default_wwhp_heating_cop_map_list = [
+    Dict{String, Real}("eft" => 20, "100" => 3.351, "110" => 3.351, "120" => 3.351)
+    Dict{String, Real}("eft" => 30, "100" => 3.639, "110" => 3.639, "120" => 3.639)
+    Dict{String, Real}("eft" => 40, "100" => 4.161, "110" => 4.161, "120" => 4.161)
+    Dict{String, Real}("eft" => 50, "100" => 4.681, "110" => 4.681, "120" => 4.681)
+    Dict{String, Real}("eft" => 60, "100" => 5.081, "110" => 5.081, "120" => 5.081) 
+    Dict{String, Real}("eft" => 70, "100" => 5.678, "110" => 5.678, "120" => 5.678) 
+    Dict{String, Real}("eft" => 80, "100" => 6.047, "110" => 6.047, "120" => 6.047) 
+    Dict{String, Real}("eft" => 90, "100" => 6.341, "110" => 6.341, "120" => 6.341) 
+    Dict{String, Real}("eft" => 100, "100" => 6.341, "110" => 6.341, "120" => 6.341)  
+    Dict{String, Real}("eft" => 110, "100" => 6.341, "110" => 6.341, "120" => 6.341)
+    Dict{String, Real}("eft" => 120, "100" => 6.341, "110" => 6.341, "120" => 6.341)
+]
+
 """
     InputsStruct
 
@@ -39,6 +67,7 @@ This struct defines the inputs for the GhpGhx module
 Base.@kwdef mutable struct InputsStruct
     ##### These are the exact /GhpGhx POST names from the API #####
     # Parameters
+    heat_pump_configuration::String  = "WSHP"  # "WSHP" or "WWHP"
     borehole_depth_ft::Float64 = 400.0
     ghx_header_depth_ft::Float64 = 4.0
     borehole_spacing_ft::Float64 = 20.0
@@ -68,13 +97,26 @@ Base.@kwdef mutable struct InputsStruct
     aux_cooler_energy_use_intensity_kwe_per_kwt::Float64 = 0.02
     hybrid_ghx_sizing_method::String = "None"
     hybrid_ghx_sizing_fraction::Float64 = 0.6
+    wwhp_cooling_setpoint_f::Float64 = 55.0
+    wwhp_heating_setpoint_f::Float64 = 110.0
+
+    # Centralized GHP
+    wwhp_heating_pump_fluid_flow_rate_gpm_per_ton::Float64 = 3.0
+    wwhp_cooling_pump_fluid_flow_rate_gpm_per_ton::Float64 = 3.0
+    wwhp_heating_pump_power_watt_per_gpm::Float64 = 15.0
+    wwhp_cooling_pump_power_watt_per_gpm::Float64 = 15.0
+    wwhp_heating_pump_min_speed_fraction::Float64 = 0.1
+    wwhp_cooling_pump_min_speed_fraction::Float64 = 0.1
+    wwhp_heating_pump_power_exponent::Float64 = 2.2
+    wwhp_cooling_pump_power_exponent::Float64 = 2.2
 
     # Array/Dict inputs
     heating_thermal_load_mmbtu_per_hr::Array{Float64,1} = Float64[]
     cooling_thermal_load_ton::Array{Float64,1} = Float64[]
     ambient_temperature_f::Array{Float64,1} = Float64[]
     cop_map_eft_heating_cooling::Array{Any,1} = Dict[]
-
+    wwhp_cop_map_eft_heating::Array{Any,1} = Dict[]
+    wwhp_cop_map_eft_cooling::Array{Any,1} = Dict[]
     # Model Settings
     simulation_years::Int64 = 25  # Number of years for GHP-GHX model
     solver_eft_tolerance_f::Float64 = 2.0  # Tolerance for the EFT error to accept a GHX sizing solution
@@ -121,6 +163,8 @@ Base.@kwdef mutable struct InputsStruct
     CoolingThermalLoadKW::Array{Float64, 1} = Float64[]  # Cooling thermal load to be served by GHP
     AmbientTemperature::Array{Float64, 1} = Float64[]  # Dry-bulb outdoor air temperature in degrees Fahrenheit 
     HeatPumpCOPMap::Matrix{Float64}  # Includes heating and cooling heat pump COP versus EWT (degF)
+    HeatingHeatPumpCOPMap::Matrix{Float64}  # Heating heat pump COP versus EWT (degF)
+    CoolingHeatPumpCOPMap::Matrix{Float64}  # Cooling heat pump COP versus EWT (degF)
 
     # These are defined based on the above inputs and processed in the function below
     TON_TO_KW::Float64 = NaN # [kw/ton]
@@ -140,6 +184,26 @@ Base.@kwdef mutable struct InputsStruct
     Prated_GHXPump::Float64 = NaN
     LPS_GHXPump::Float64 = NaN
     Mdot_GHXPump::Float64 = NaN
+
+    # Centralized GHP - WWHP
+    GPMperTon_WWHP_H::Float64 = NaN  #!Nominal flow rate of the water-water heating heat pumps from the GHX (gpm/ton) 
+    GPMperTon_WWHP_C::Float64 = NaN  #!Nominal flow rate of the water-water cooling heat pumps from the GHX (gpm/ton)
+    WattPerGPM_HeatingPumps::Float64 = NaN #!Nominal pump power for delivery of hot water to the loads (WWHP systems) (Watt/gpm)
+    WattPerGPM_CoolingPumps::Float64 = NaN #!Nominal pump power for delivery of chilled water to the loads (WWHP systems) (Watt/gpm)
+    fmin_VSP_HeatingPumps::Float64 = NaN  #!Minimum heating loop pump speed for variable speed option (set to 1 if constant speed pumps)
+    fmin_VSP_CoolingPumps::Float64 = NaN  #!Minimum cooling pump speed for variable speed option (set to 1 if constant speed pumps)
+    Exponent_HeatingPumps::Float64 = NaN  #!Exponent for relationship between heating loop pump power and heating loop pump flow rate
+    Exponent_CoolingPumps::Float64 = NaN  #!Exponent for relationship between cooling loop pump power and cooling loop pump flow rate
+
+    PeakTons_WWHP_H::Float64 = NaN
+    PeakTons_WWHP_C::Float64 = NaN
+    PeakTons_WWHP_GHX::Float64 = NaN
+    fPeak_WWHP_H::Float64 = NaN
+
+    GPM_HeatingPumps::Float64 = NaN
+    GPM_CoolingPumps::Float64 = NaN
+    Prated_HeatingPumps::Float64 = NaN
+    Prated_CoolingPumps::Float64 = NaN
 end
 
 
@@ -153,22 +217,61 @@ function InputsProcess(d::Dict)
     # Convert all Dict key strings to symbols which is required for kwargs inputs of InputsStruct
     d = dictkeys_tosymbols(d)
 
-    # Load in default COP map, if not input, which is a NON-keyword argument, so required for InputsStruct instantiation
-    if !haskey(d, :cop_map_eft_heating_cooling) || isempty(d[:cop_map_eft_heating_cooling])
-        cop_map_list = deepcopy(default_cop_map_list)
-    else
-        cop_map_list = d[:cop_map_eft_heating_cooling]
-    end
-    # Convert COP map list_of_dict to Matrix{Float64} (alias for Array{Float64, 2})
-    d[:HeatPumpCOPMap] = zeros(Float64, length(cop_map_list), 3)
-    for i in eachindex(cop_map_list)
-        d[:HeatPumpCOPMap][i,1] = cop_map_list[i]["eft"]
-        d[:HeatPumpCOPMap][i,2] = cop_map_list[i]["heat_cop"]
-        d[:HeatPumpCOPMap][i,3] = cop_map_list[i]["cool_cop"]
-    end    
-    
+    d[:HeatPumpCOPMap] = zeros(Float64, 1, 1)
+    d[:HeatingHeatPumpCOPMap] = zeros(Float64, 1, 1)
+    d[:CoolingHeatPumpCOPMap] = zeros(Float64, 1, 1)
+
     # Instantiate the mutable struct for assigning default values from Base.@kwdef and allows processing/modifying
     d = InputsStruct(; d...)
+
+    # Heat pump configuration
+    if d.heat_pump_configuration == "WSHP"
+        d.I_Configuration = 1
+    elseif d.heat_pump_configuration == "WWHP"
+        d.I_Configuration = 3
+    else
+        print("Unknown heat pump configuration entered.")
+    end
+    
+    if d.I_Configuration == 1
+        # Load in default COP map, if not input, which is a NON-keyword argument, so required for InputsStruct instantiation
+        if isempty(d.cop_map_eft_heating_cooling)
+            cop_map_list = deepcopy(default_cop_map_list)
+        else
+            cop_map_list = d.cop_map_eft_heating_cooling
+        end
+        # Convert COP map list_of_dict to Matrix{Float64} (alias for Array{Float64, 2})
+        d.HeatPumpCOPMap = zeros(Float64, length(cop_map_list), 3)
+        for i in eachindex(cop_map_list)
+            d.HeatPumpCOPMap[i,1] = cop_map_list[i]["eft"]
+            d.HeatPumpCOPMap[i,2] = cop_map_list[i]["heat_cop"]
+            d.HeatPumpCOPMap[i,3] = cop_map_list[i]["cool_cop"]
+        end  
+
+    elseif d.I_Configuration == 3
+        
+        if isempty(d.wwhp_cop_map_eft_heating)
+            heating_cop_map_list = deepcopy(default_wwhp_heating_cop_map_list)
+        else
+            heating_cop_map_list = d.wwhp_cop_map_eft_heating
+        end
+        if isempty(d.wwhp_cop_map_eft_cooling)
+            cooling_cop_map_list = deepcopy(default_wwhp_cooling_cop_map_list)
+        else
+            cooling_cop_map_list = d.wwhp_cop_map_eft_cooling
+        end
+
+        heating_COPs, heating_EFTs = get_wwhp_cop_matrix(heating_cop_map_list, d.wwhp_heating_setpoint_f)
+        cooling_COPs, cooling_EFTs = get_wwhp_cop_matrix(cooling_cop_map_list, d.wwhp_cooling_setpoint_f)
+
+        d.HeatingHeatPumpCOPMap = zeros(Float64, length(heating_cop_map_list), 2)
+        d.CoolingHeatPumpCOPMap = zeros(Float64, length(cooling_cop_map_list), 2)
+
+        d.HeatingHeatPumpCOPMap[:, 1] = heating_EFTs
+        d.HeatingHeatPumpCOPMap[:, 2] = heating_COPs
+        d.CoolingHeatPumpCOPMap[:, 1] = cooling_EFTs
+        d.CoolingHeatPumpCOPMap[:, 2] = cooling_COPs
+    end
 
     # Constants
     d.TON_TO_KW = 3.51685  # [kw/ton]
@@ -224,14 +327,30 @@ function InputsProcess(d::Dict)
     end
     
     d.T_Ground= sum(d.AmbientTemperature) / (365 * 24)  # [C]
-    d.Tamp_Ground=  (maximum(avg_temp_month) - minimum(avg_temp_month)) / 2  # [C]
+    d.Tamp_Ground= (maximum(avg_temp_month) - minimum(avg_temp_month)) / 2  # [C]
     d.DayMin_Surface= convert(Int64, round(argmin(d.AmbientTemperature) / 24))  # day of year
 
     # Find peak heating, cooling, and combined for initial sizing guess
     d.PeakTons_WSHP_H= maximum(d.HeatingThermalLoadKW) / d.TON_TO_KW
     d.PeakTons_WSHP_C= maximum(d.cooling_thermal_load_ton)
-    d.PeakTons_WSHP_GHX= maximum(d.HeatingThermalLoadKW+ d.CoolingThermalLoadKW) / d.TON_TO_KW
+    d.PeakTons_WSHP_GHX= maximum(d.HeatingThermalLoadKW + d.CoolingThermalLoadKW) / d.TON_TO_KW
     d.X_init= d.init_sizing_factor_ft_per_peak_ton/ d.METER_TO_FEET* d.PeakTons_WSHP_GHX # [m]
+    
+    # Centralized GHP - WWHP 
+    d.GPMperTon_WWHP_H = d.wwhp_heating_pump_fluid_flow_rate_gpm_per_ton
+    d.GPMperTon_WWHP_C = d.wwhp_cooling_pump_fluid_flow_rate_gpm_per_ton
+    d.WattPerGPM_HeatingPumps = d.wwhp_heating_pump_power_watt_per_gpm
+    d.WattPerGPM_CoolingPumps = d.wwhp_cooling_pump_power_watt_per_gpm
+    d.fmin_VSP_HeatingPumps = d.wwhp_heating_pump_min_speed_fraction
+    d.fmin_VSP_CoolingPumps = d.wwhp_cooling_pump_min_speed_fraction
+    d.Exponent_HeatingPumps = d.wwhp_heating_pump_power_exponent
+    d.Exponent_CoolingPumps = d.wwhp_cooling_pump_power_exponent
+
+    d.PeakTons_WWHP_H = maximum(d.HeatingThermalLoadKW) / d.TON_TO_KW
+    d.PeakTons_WWHP_C = maximum(d.cooling_thermal_load_ton)
+    d.PeakTons_WWHP_GHX = maximum(d.HeatingThermalLoadKW + d.CoolingThermalLoadKW) / d.TON_TO_KW
+    idx = findmax(d.HeatingThermalLoadKW + d.CoolingThermalLoadKW)[2]
+    d.fPeak_WWHP_H = (d.HeatingThermalLoadKW / d.TON_TO_KW)[idx] / (max(0.0001, (d.HeatingThermalLoadKW / d.TON_TO_KW)[idx] + d.cooling_thermal_load_ton[idx]))
     
     # Set some intermediate conditions
     d.N_Series= 1
@@ -239,14 +358,69 @@ function InputsProcess(d::Dict)
     d.N_Vertical= 50
     d.RhoCp_Soil= d.Rho_Soil* d.Cp_Soil
     d.DayMin_DST= 270.0 - d.DayMin_Surface
-    d.GPM_GHXPump= d.GPMperTon_WSHP* d.PeakTons_WSHP_GHX
+
+    if d.I_Configuration == 1
+        d.GPM_GHXPump = d.GPMperTon_WSHP* d.PeakTons_WSHP_GHX
+    elseif d.I_Configuration == 3
+        d.GPM_GHXPump = d.GPMperTon_WWHP_H * d.PeakTons_WWHP_GHX * d.fPeak_WWHP_H + d.GPMperTon_WWHP_C * d.PeakTons_WWHP_GHX * (1 - d.fPeak_WWHP_H)
+
+        d.GPM_HeatingPumps = d.GPMperTon_WWHP_H * d.PeakTons_WWHP_H 
+        d.GPM_CoolingPumps = d.GPMperTon_WWHP_C * d.PeakTons_WWHP_C 
+        d.Prated_HeatingPumps = d.WattPerGPM_HeatingPumps * 3.6 * d.GPM_HeatingPumps
+        d.Prated_CoolingPumps = d.WattPerGPM_CoolingPumps * 3.6 * d.GPM_CoolingPumps
+    end
+
     d.Prated_GHXPump= d.WattPerGPM_GHXPump* 3.6 * d.GPM_GHXPump
     d.LPS_GHXPump= d.GPM_GHXPump/ 60 / 264.172 * 1000.0
     d.Mdot_GHXPump= d.GPM_GHXPump* 60 / 264.172 * d.Rho_GHXFluid
-    
+
     # Return processed (modified) InputsStruct d
     return d 
 end
+
+function get_wwhp_cop_matrix(cop_map::Array, setpoint::Float64)
+    
+    cop_map_keys = deepcopy(cop_map[1])
+    pop!(cop_map_keys, "eft")
+    
+    temperature_setpoints = sort(parse.(Int64, collect(keys(cop_map_keys))))
+    
+    HeatPumpCOPMap = zeros(Float64, length(cop_map), length(temperature_setpoints)+1)
+    
+    # Create heat pump COP matrix
+    for i in eachindex(cop_map)
+        HeatPumpCOPMap[i,1] = cop_map[i]["eft"]
+        for (idx, tmp) in enumerate(temperature_setpoints)
+            HeatPumpCOPMap[i, idx+1] = cop_map[i][string(tmp)]
+        end 
+    end 
+    
+    if setpoint <= temperature_setpoints[1]
+        cop = [:, 2]
+    elseif setpoint > temperature_setpoints[end]
+        cop = HeatPumpCOPMap[:, end]     
+    elseif setpoint in temperature_setpoints
+        idx = findfirst(x->x == setpoint, temperature_setpoints)
+        cop = HeatPumpCOPMap[:, idx+1]  
+    else
+        # Loop over all temperature points in HeatPumpCOPMap, but break out of loop if it is found
+        for (index, tmp) in enumerate(temperature_setpoints[2:end])  # Omit first and last temp checks, done above    
+            if setpoint > temperature_setpoints[index, 1] && setpoint <= tmp   
+                cop = []
+                for i in eachindex(HeatPumpCOPMap[:,1])
+                    slope = (HeatPumpCOPMap[i, index+2] - HeatPumpCOPMap[i, index+1]) / (tmp - temperature_setpoints[index])
+                    append!(cop, HeatPumpCOPMap[i, index+1] + (tmp - setpoint) * slope)
+                end
+                break
+            end
+        end
+    end
+
+    eft = HeatPumpCOPMap[:,1]
+    
+    return cop, eft
+end
+
 
 """
     dictkeys_tosymbols(d::Dict)

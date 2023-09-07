@@ -27,8 +27,12 @@ Base.@kwdef mutable struct ResultsStruct
     Qfluid_GHXPump::Float64 = 0.0
     Power_WSHP_H::Float64 = 0.0
     Power_WSHP_C::Float64 = 0.0
+    Power_WWHP_H::Float64 = 0.0
+    Power_WWHP_C::Float64 = 0.0
     LoadMet_WSHP_H::Float64 = 0.0
     LoadMet_WSHP_C::Float64 = 0.0
+    LoadMet_WWHP_H::Float64 = 0.0
+    LoadMet_WWHP_C::Float64 = 0.0
     Q_Rejected_Total::Float64 = 0.0
     Q_Absorbed_Total::Float64 = 0.0
     Q_GHX_Net::Float64 = 0.0
@@ -44,12 +48,22 @@ Base.@kwdef mutable struct ResultsStruct
     Qnet_GHX::Float64 = 0.0
     Qnet_HeatPumps::Float64 = 0.0
     Qnet_RunningTotal::Float64 = 0.0
-
+    
+    # Centralized GHP
+    Power_HeatingPumps::Float64 = 0.0
+    Qfluid_HeatingPumps::Float64 = 0.0
+    Power_CoolingPumps::Float64 = 0.0
+    Qfluid_CoolingPumps::Float64 = 0.0
+    
     # Array results
     total_hours::Int64  # Required argument to be passed by InputsStruct
     P_GHXPump_Hourly::Array{Float64, 1} = zeros(total_hours)
+    P_HeatingPumps_Hourly::Array{Float64, 1} = zeros(total_hours)
+    P_CoolingPumps_Hourly::Array{Float64, 1} = zeros(total_hours)
     P_WSHPh_Hourly::Array{Float64, 1} = zeros(total_hours)
     P_WSHPc_Hourly::Array{Float64, 1} = zeros(total_hours)
+    P_WWHPh_Hourly::Array{Float64, 1} = zeros(total_hours)
+    P_WWHPc_Hourly::Array{Float64, 1} = zeros(total_hours)
     Qh_Hourly::Array{Float64, 1} = zeros(total_hours)
     Qc_Hourly::Array{Float64, 1} = zeros(total_hours)
     QauxHt_Hourly::Array{Float64, 1} = zeros(total_hours)
@@ -109,8 +123,13 @@ function get_results_for_reopt(r::ResultsStruct, p::InputsStruct)
     
     # Get average electric consumption
     for yr in 1:p.simulation_years
-        results_dict["yearly_heating_heatpump_electric_consumption_series_kw"] += round.(r.P_WSHPh_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
-        results_dict["yearly_cooling_heatpump_electric_consumption_series_kw"] += round.(r.P_WSHPc_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
+        if p.I_Configuration == 1
+            results_dict["yearly_heating_heatpump_electric_consumption_series_kw"] += round.(r.P_WSHPh_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
+            results_dict["yearly_cooling_heatpump_electric_consumption_series_kw"] += round.(r.P_WSHPc_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
+        elseif p.I_Configuration == 3
+            results_dict["yearly_heating_heatpump_electric_consumption_series_kw"] += round.(r.P_WWHPh_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
+            results_dict["yearly_cooling_heatpump_electric_consumption_series_kw"] += round.(r.P_WWHPc_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
+        end
         results_dict["yearly_ghx_pump_electric_consumption_series_kw"] += round.(r.P_GHXPump_Hourly[(yr-1)*8760+1:yr*8760] / p.simulation_years, digits=3)
         results_dict["yearly_heat_pump_eft_series_f"] += round.((r.EWT[(yr-1)*8760+1:yr*8760] * 1.8 .+ 32.0) / p.simulation_years, digits=3)
     end
@@ -155,9 +174,18 @@ function get_results_for_reopt(r::ResultsStruct, p::InputsStruct)
         results_dict["yearly_aux_heater_electric_consumption_series_kw"] + 
         results_dict["yearly_aux_cooler_electric_consumption_series_kw"]
     results_dict["yearly_total_electric_consumption_kwh"] = round(sum(results_dict["yearly_total_electric_consumption_series_kw"]), digits=1)
-    results_dict["peak_heating_heatpump_thermal_ton"] = round(p.PeakTons_WSHP_H, digits=3)
-    results_dict["peak_cooling_heatpump_thermal_ton"] = round(p.PeakTons_WSHP_C, digits=3)
-    results_dict["peak_combined_heatpump_thermal_ton"] = round(p.PeakTons_WSHP_GHX, digits=3)
+    if p.I_Configuration == 1
+        results_dict["peak_heating_heatpump_thermal_ton"] = round(p.PeakTons_WSHP_H, digits=3)
+        results_dict["peak_cooling_heatpump_thermal_ton"] = round(p.PeakTons_WSHP_C, digits=3)
+        results_dict["peak_combined_heatpump_thermal_ton"] = round(p.PeakTons_WSHP_GHX, digits=3)
+    elseif p.I_Configuration == 3
+        results_dict["peak_heating_heatpump_thermal_ton"] = round(p.PeakTons_WWHP_H, digits=3)
+        results_dict["peak_cooling_heatpump_thermal_ton"] = round(p.PeakTons_WWHP_C, digits=3)
+        results_dict["peak_combined_heatpump_thermal_ton"] = round(p.PeakTons_WWHP_GHX, digits=3)
+    end
+    
+    results_dict["heat_pump_configuration"] = p.heat_pump_configuration
+
     results_dict["max_eft_f"] = round(maximum(r.EWT) * 1.8 + 32.0)
     results_dict["min_eft_f"] = round(minimum(r.EWT) * 1.8 + 32.0)
     # Calculate average COP for heating and cooling; estimate allocation of pump power to heating and cooling by thermal energy served
