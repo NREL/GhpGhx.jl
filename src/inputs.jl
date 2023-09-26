@@ -32,31 +32,21 @@ const default_cop_map_list = [
 ]
 
 const default_wwhp_cooling_cop_map_list = [
-    Dict{String, Real}("eft" => 20, "40" => 11.023, "50" => 11.023, "60" => 11.023)
-    Dict{String, Real}("eft" => 30, "40" => 11.023, "50" => 11.023, "60" => 11.023)
-    Dict{String, Real}("eft" => 40, "40" => 11.023, "50" => 11.023, "60" => 11.023)
-    Dict{String, Real}("eft" => 50, "40" => 10.481, "50" => 10.481, "60" => 10.481)
-    Dict{String, Real}("eft" => 60, "40" => 9.168, "50" => 9.168, "60" => 9.1683) 
-    Dict{String, Real}("eft" => 70, "40" => 7.263, "50" => 7.263, "60" => 7.263) 
-    Dict{String, Real}("eft" => 80, "40" => 5.826, "50" => 5.826, "60" => 5.8263) 
-    Dict{String, Real}("eft" => 90, "40" => 4.803, "50" => 4.803, "60" => 4.803) 
-    Dict{String, Real}("eft" => 100, "40" => 3.9, "50" => 3.9, "60" => 3.9)  
-    Dict{String, Real}("eft" => 110, "40" => 3.279, "50" => 3.279, "60" => 3.279)
-    Dict{String, Real}("eft" => 120, "40" => 2.707, "50" => 2.707, "60" => 2.707)
+    Dict{String, Real}("eft" => 50, "40" => 6.9, "50" => 8, "60" => 9.1)
+    Dict{String, Real}("eft" => 60, "40" => 6.2, "50" => 7.2, "60" => 8.3) 
+    Dict{String, Real}("eft" => 70, "40" => 5.6, "50" => 6.5, "60" => 7.4) 
+    Dict{String, Real}("eft" => 80, "40" => 4.9, "50" => 5.8, "60" => 6.6) 
+    Dict{String, Real}("eft" => 90, "40" => 4.3, "50" => 5.1, "60" => 5.8) 
+    Dict{String, Real}("eft" => 100, "40" => 3.6, "50" => 4.4, "60" => 5.0)  
 ]
 
 const default_wwhp_heating_cop_map_list = [
-    Dict{String, Real}("eft" => 20, "100" => 3.351, "110" => 3.351, "120" => 3.351)
-    Dict{String, Real}("eft" => 30, "100" => 3.639, "110" => 3.639, "120" => 3.639)
-    Dict{String, Real}("eft" => 40, "100" => 4.161, "110" => 4.161, "120" => 4.161)
-    Dict{String, Real}("eft" => 50, "100" => 4.681, "110" => 4.681, "120" => 4.681)
-    Dict{String, Real}("eft" => 60, "100" => 5.081, "110" => 5.081, "120" => 5.081) 
-    Dict{String, Real}("eft" => 70, "100" => 5.678, "110" => 5.678, "120" => 5.678) 
-    Dict{String, Real}("eft" => 80, "100" => 6.047, "110" => 6.047, "120" => 6.047) 
-    Dict{String, Real}("eft" => 90, "100" => 6.341, "110" => 6.341, "120" => 6.341) 
-    Dict{String, Real}("eft" => 100, "100" => 6.341, "110" => 6.341, "120" => 6.341)  
-    Dict{String, Real}("eft" => 110, "100" => 6.341, "110" => 6.341, "120" => 6.341)
-    Dict{String, Real}("eft" => 120, "100" => 6.341, "110" => 6.341, "120" => 6.341)
+    Dict{String, Real}("eft" => 30, "120" => 2.7, "130" => 2.3, "140" => 2.2)
+    Dict{String, Real}("eft" => 40, "120" => 3.2, "130" => 2.8, "140" => 2.7)
+    Dict{String, Real}("eft" => 50, "120" => 3.7, "130" => 3.2, "140" => 3.1)
+    Dict{String, Real}("eft" => 60, "120" => 4.2, "130" => 3.7, "140" => 3.5) 
+    Dict{String, Real}("eft" => 70, "120" => 4.7, "130" => 4.1, "140" => 4.0) 
+    Dict{String, Real}("eft" => 80, "120" => 5.2, "130" => 4.6, "140" => 4.4) 
 ]
 
 """
@@ -98,7 +88,7 @@ Base.@kwdef mutable struct InputsStruct
     hybrid_ghx_sizing_method::String = "None"
     hybrid_ghx_sizing_fraction::Float64 = 0.6
     wwhp_cooling_setpoint_f::Float64 = 55.0
-    wwhp_heating_setpoint_f::Float64 = 110.0
+    wwhp_heating_setpoint_f::Float64 = 140.0
 
     # Centralized GHP
     wwhp_heating_pump_fluid_flow_rate_gpm_per_ton::Float64 = 3.0
