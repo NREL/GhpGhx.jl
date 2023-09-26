@@ -119,14 +119,14 @@ Base.@kwdef mutable struct InputsStruct
     wwhp_cop_map_eft_cooling::Array{Any,1} = Dict[]
     
     # Model Settings
-    hybrid_auto_ghx_sizing_flag::Bool = false
-    simulation_years::Int64 = hybrid_auto_ghx_sizing_flag ? 2 : 25  # Number of years for GHP-GHX model
+    hybrid_auto_ghx_sizing_flag::Bool = false # updates simulation_years and max_sizing_iterations for auto ghx sizing.
+    simulation_years::Int64 = 25  # Number of years for GHP-GHX model
     solver_eft_tolerance_f::Float64 = 2.0  # Tolerance for the EFT error to accept a GHX sizing solution
     solver_eft_tolerance::Float64 = 2.0 / 1.8  # Convert to degC
     ghx_model::String = "TESS" # "TESS" or "DST"
     dst_ghx_timesteps_per_hour::Int64 = 12
     tess_ghx_minimum_timesteps_per_hour::Int64 = 1
-    max_sizing_iterations::Int64 = hybrid_auto_ghx_sizing_flag ? 1 : 15
+    max_sizing_iterations::Int64 = 15
     init_sizing_factor_ft_per_peak_ton::Float64 = 75 #246.1
     
     ##### These are the variable names used in the GhpGhx, kept from TESS ######
@@ -229,6 +229,8 @@ function InputsProcess(d::Dict)
     if d.hybrid_auto_ghx_sizing_flag
         @info "Running GhpGhx for automatic hybrid GHX sizing. Simulation years \
          is 2 and maximum sizing iterations is 1"
+        d.simulation_years = 2
+        d.max_sizing_iterations = 1
     end
 
     # Heat pump configuration
