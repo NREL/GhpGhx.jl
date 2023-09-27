@@ -107,7 +107,9 @@ Base.@kwdef mutable struct InputsStruct
     cop_map_eft_heating_cooling::Array{Any,1} = Dict[]
     wwhp_cop_map_eft_heating::Array{Any,1} = Dict[]
     wwhp_cop_map_eft_cooling::Array{Any,1} = Dict[]
+    
     # Model Settings
+    hybrid_auto_ghx_sizing_flag::Bool = false # updates simulation_years and max_sizing_iterations for auto ghx sizing.
     simulation_years::Int64 = 25  # Number of years for GHP-GHX model
     solver_eft_tolerance_f::Float64 = 2.0  # Tolerance for the EFT error to accept a GHX sizing solution
     solver_eft_tolerance::Float64 = 2.0 / 1.8  # Convert to degC
@@ -213,6 +215,13 @@ function InputsProcess(d::Dict)
 
     # Instantiate the mutable struct for assigning default values from Base.@kwdef and allows processing/modifying
     d = InputsStruct(; d...)
+
+    if d.hybrid_auto_ghx_sizing_flag
+        @info "Running GhpGhx for automatic hybrid GHX sizing. Simulation years \
+         is 2 and maximum sizing iterations is 1"
+        d.simulation_years = 2
+        d.max_sizing_iterations = 1
+    end
 
     # Heat pump configuration
     if d.heat_pump_configuration == "WSHP"
