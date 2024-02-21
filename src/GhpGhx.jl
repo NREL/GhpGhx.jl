@@ -345,12 +345,16 @@ function size_borefield(p)
                         XIN[2] = Mdot_GHX
                         XIN[3] = p.AmbientTemperature[hr]
                         XIN[4] = p.AmbientTemperature[hr]
-                        if Sys.islinux() || Sys.isapple()
+                        if Sys.islinux()
                             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_linux.so"))), Cvoid, 
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         elseif Sys.iswindows()
                             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
+                            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+                        elseif Sys.isapple()
+                            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_mac.so"))), Cvoid, 
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         end
