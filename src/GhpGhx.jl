@@ -440,7 +440,7 @@ function size_borefield(p)
                         (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                         TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                     elseif p.ghx_model == "TESS"
-                        if Sys.islinux() || Sys.isapple()
+                        if Sys.islinux()
                             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_linux.so"))), Cvoid, 
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
@@ -448,6 +448,10 @@ function size_borefield(p)
                             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+                        elseif Sys.isapple()
+                            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_mac.so"))), Cvoid, 
+                            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)    
                         end                 
                     end 
                     INFO[13] = 0
@@ -746,7 +750,7 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
         XIN[4] = 20.0
 
         # First time
-        if Sys.islinux() || Sys.isapple()
+        if Sys.islinux()
             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_linux.so"))), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
@@ -754,13 +758,17 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+        elseif Sys.isapple()
+            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_mac.so"))), Cvoid, 
+            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)    
         end       
 
         INFO[7] = 0
         INFO[8] = 3
 
         # Second time
-        if Sys.islinux() || Sys.isapple()
+        if Sys.islinux()
             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_linux.so"))), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
@@ -768,6 +776,10 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
             ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_windows.so"))), Cvoid, 
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+        elseif Sys.isapple()
+            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_mac.so"))), Cvoid, 
+            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)    
         end        
     end
 end    
