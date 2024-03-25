@@ -58,7 +58,7 @@ Base.@kwdef mutable struct InputsStruct
     ##### These are the exact /GhpGhx POST names from the API #####
     # Parameters
     heat_pump_configuration::String  = "WSHP"  # "WSHP" or "WWHP"
-    borehole_depth_ft::Float64 = 400.0
+    borehole_depth_ft::Float64 = 443.0 # old value = 400, ResStock = 152m, ComStock and URBANopt = 135m = 443 ft
     ghx_header_depth_ft::Float64 = 6.6    # old value = 4.0 # ResStock, ComStock, and URBANopt value is 2m = 6.56168 ft
     borehole_spacing_ft::Float64 = 20.0
     borehole_diameter_inch::Float64 = 6.0 # old value = 5 inch, ResStock, ComStock, and URBANopt value is 6 inch
@@ -70,7 +70,7 @@ Base.@kwdef mutable struct InputsStruct
     ground_thermal_conductivity_btu_per_hr_ft_f::Float64 = NaN  # Default depends on climate zone
     ground_mass_density_lb_per_ft3::Float64 = 162.3
     ground_specific_heat_btu_per_lb_f::Float64 = 0.211
-    grout_thermal_conductivity_btu_per_hr_ft_f::Float64 = 1.0
+    grout_thermal_conductivity_btu_per_hr_ft_f::Float64 = 0.75 # old value = 1.0, ResStock, ComStock, URBANopt value = 1.3 W/m-K = 0.75 BTU/ft-F
     ghx_fluid_specific_heat_btu_per_lb_f::Float64 = 1.0
     ghx_fluid_mass_density_lb_per_ft3::Float64 = 62.4
     ghx_fluid_thermal_conductivity_btu_per_hr_ft_f::Float64 = 0.34
