@@ -59,14 +59,14 @@ Base.@kwdef mutable struct InputsStruct
     # Parameters
     heat_pump_configuration::String  = "WSHP"  # "WSHP" or "WWHP"
     borehole_depth_ft::Float64 = 400.0
-    ghx_header_depth_ft::Float64 = 4.0
+    ghx_header_depth_ft::Float64 = 6.6    # old value = 4.0 # ResStock, ComStock, and URBANopt value is 2m = 6.56168 ft
     borehole_spacing_ft::Float64 = 20.0
-    borehole_diameter_inch::Float64 = 5.0
+    borehole_diameter_inch::Float64 = 6.0 # old value = 5 inch, ResStock, ComStock, and URBANopt value is 6 inch
     borehole_spacing_type::String  = "rectangular"  # "rectangular" or "hexagonal"
     ghx_pipe_outer_diameter_inch::Float64 = 1.66
     ghx_pipe_wall_thickness_inch::Float64 = 0.16
-    ghx_pipe_thermal_conductivity_btu_per_hr_ft_f::Float64 = 0.25
-    ghx_shank_space_inch::Float64 = 2.5
+    ghx_pipe_thermal_conductivity_btu_per_hr_ft_f::Float64 = 0.23 # Old value = 0.25 = 0.43 W/m-K. ReStock, ComStock and URBANopt value is 0.4 W/m-K which is 0.23127039296 BTU/ft-F
+    ghx_shank_space_inch::Float64 = 1.27 # old value = 2.5, ResStock = 0.0246m = 0.97 inch, ComStock & URBANopt = 0.0323m = 1.27 inch. Goes with ComStock & URBANopt value
     ground_thermal_conductivity_btu_per_hr_ft_f::Float64 = NaN  # Default depends on climate zone
     ground_mass_density_lb_per_ft3::Float64 = 162.3
     ground_specific_heat_btu_per_lb_f::Float64 = 0.211
