@@ -777,8 +777,8 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
                 TimeArray, XIN, OUT, PAR, INFO, ErrorFound)    
             catch
                 ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_arm_mac.so"))), Cvoid, 
-            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
-            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)  
+                (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                TimeArray, XIN, OUT, PAR, INFO, ErrorFound)  
             end
         end       
 
@@ -803,6 +803,7 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
                 ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_arm_mac.so"))), Cvoid, 
                 (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                 TimeArray, XIN, OUT, PAR, INFO, ErrorFound)  
+            end
         end        
     end
 end    
