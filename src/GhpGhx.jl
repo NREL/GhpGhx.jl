@@ -354,9 +354,16 @@ function size_borefield(p)
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         elseif Sys.isapple()
-                            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_mac.so"))), Cvoid, 
-                            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
-                            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+                            try
+                                @info "Running GhpGhx using intel built tess.so"
+                                ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_intel_mac.so"))), Cvoid, 
+                                (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                                TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+                            catch
+                                @info "Running GhpGhx using ARM built tess.so"
+                                ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_arm_mac.so"))), Cvoid, 
+                                (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                                TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         end
                     end
 
