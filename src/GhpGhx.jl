@@ -354,9 +354,19 @@ function size_borefield(p)
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         elseif Sys.isapple()
-                            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_mac.so"))), Cvoid, 
-                            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
-                            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+                            if Sys.ARCH == :x86_64
+                                ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_intel_mac.so"))), Cvoid, 
+                                (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                                TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+                            elseif Sys.ARCH == :aarch64
+                                ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_arm_mac.so"))), Cvoid, 
+                                (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                                TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+                            else
+                                throw(@error("Unsupported Apple Architecture"))    
+                            end
+                        else
+                            throw(@error("Unsupported Operating System"))
                         end
                     end
 
@@ -449,9 +459,19 @@ function size_borefield(p)
                             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
                             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
                         elseif Sys.isapple()
-                            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_mac.so"))), Cvoid, 
-                            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
-                            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)    
+                            if Sys.ARCH == :x86_64
+                                ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_intel_mac.so"))), Cvoid, 
+                                (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                                TimeArray, XIN, OUT, PAR, INFO, ErrorFound)   
+                            elseif Sys.ARCH == :aarch64
+                                ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_arm_mac.so"))), Cvoid, 
+                                (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                                TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+                            else
+                                throw(@error("Unsupported Apple Architecture")) 
+                            end
+                        else
+                            throw(@error("Unsupported Operating System"))
                         end                 
                     end 
                     INFO[13] = 0
@@ -759,9 +779,19 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         elseif Sys.isapple()
-            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_mac.so"))), Cvoid, 
-            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
-            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)    
+            if Sys.ARCH == :x86_64
+                ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_intel_mac.so"))), Cvoid, 
+                (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                TimeArray, XIN, OUT, PAR, INFO, ErrorFound)    
+            elseif Sys.ARCH == :aarch64
+                ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_arm_mac.so"))), Cvoid, 
+                (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+            else
+                throw(@error("Unsupported Apple Architecture"))   
+            end
+        else
+            throw(@error("Unsupported Operating System"))
         end       
 
         INFO[7] = 0
@@ -777,9 +807,19 @@ function init_ghx_calls_2x!(p, TimeArray, XIN, OUT, PAR, INFO)
             (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
             TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
         elseif Sys.isapple()
-            ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_mac.so"))), Cvoid, 
-            (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
-            TimeArray, XIN, OUT, PAR, INFO, ErrorFound)    
+            if Sys.ARCH == :x86_64
+                ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_intel_mac.so"))), Cvoid, 
+                (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                TimeArray, XIN, OUT, PAR, INFO, ErrorFound)    
+            elseif Sys.ARCH == :aarch64
+                ccall((:type1373_, normpath(joinpath(@__DIR__,"../ghxmodel/tess_arm_mac.so"))), Cvoid, 
+                (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Int64}, Ptr{Int64}), 
+                TimeArray, XIN, OUT, PAR, INFO, ErrorFound)
+            else
+                throw(@error("Unsupported Apple Architecture")) 
+            end
+        else
+            throw(@error("Unsupported Operating System"))
         end        
     end
 end    
